@@ -1,6 +1,6 @@
 # EaseStay Hotel Reservation & Management System
 
-Repository for the EaseStay HRMS. Hello World!
+Repository for the EaseStay HRMS. Hello World 2 Electric Boogaloo
 
 ### How to set up
 
