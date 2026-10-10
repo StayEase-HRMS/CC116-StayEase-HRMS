@@ -1,83 +1,46 @@
 import logo from "../assets/logo.png"
 import { Star, BedDouble, CalendarDays, ChartColumn, LayoutDashboard } from "lucide-react";
 
-export function AdminSideBar() {
+function SideBarShell({ children }) {
 	return (
-		<div className="w-[200px] h-screen text-left sticky top-0 border-r-2 text-sm">
-			<div className="w-[100%] justify-items-center p-5 border-gray-200 border-b-1">
-				<img className="w-[140px]" src={logo}/>
+		<aside className="w-[200px] shrink-0 border-r-2 border-gray-200 bg-white text-left text-sm">
+			<div className="sticky top-0 h-screen">
+				<ul className="grid">{children}</ul>
 			</div>
-
-			<ul className="grid">
-				<li className="p-5 hover:bg-[#e3effe] hover:cursor-pointer">
-					<div className="flex gap-3 items-center">
-						<LayoutDashboard />
-						<p>Dashboard</p>
-					</div>
-				</li>
-				<li className="p-5 hover:bg-[#e3effe] hover:cursor-pointer">
-					<div className="flex gap-3 items-center">
-						<BedDouble />
-						Room management
-					</div>
-				</li>
-				<li className="p-5 hover:bg-[#e3effe] hover:cursor-pointer">
-					<div className="flex gap-3 items-center">
-						<CalendarDays />
-						<p>Reservations</p>
-					</div>
-				</li>
-				<li className="p-5 hover:bg-[#e3effe] hover:cursor-pointer">
-					<div className="flex gap-3 items-center">
-						<ChartColumn />
-						<p>Reports</p>
-					</div>
-				</li>
-				<li className="p-5 hover:bg-[#e3effe] hover:cursor-pointer">
-					<div className="flex gap-3 items-center">
-						<Star color="black" />
-						<p>Reviews & ratings</p>
-					</div>
-				</li>
-			</ul>
-		</div>
+		</aside>
 	)
 }
 
-// unfinished
+function NavItem({ icon: Icon, label, ...iconProps }) {
+	return (
+		<li className="p-5 hover:bg-[#e3effe] hover:cursor-pointer">
+			<div className="flex gap-3 items-center">
+				<Icon {...iconProps} />
+				<p>{label}</p>
+			</div>
+		</li>
+	)
+}
+
+export function AdminSideBar() {
+	return (
+		<SideBarShell>
+			<NavItem icon={LayoutDashboard} label="Dashboard" />
+			<NavItem icon={BedDouble} label="Room management" />
+			<NavItem icon={CalendarDays} label="Reservations" />
+			<NavItem icon={ChartColumn} label="Reports" />
+			<NavItem icon={Star} label="Reviews & ratings" color="black" />
+		</SideBarShell>
+	)
+}
+
 export function StaffSideBar() {
 	return (
-		<div className="w-[200px] h-screen text-left sticky top-0 border-r-2">
-			<div className="w-[100%] justify-items-center p-5 border-gray-200 border-b-1">
-				<img className="w-[140px]" src={logo}/>
-			</div>
-
-			<ul className="grid">
-				<li className="p-5 hover:bg-[#e3effe] hover:cursor-pointer">
-					<div className="flex gap-3 items-center">
-						<LayoutDashboard />
-						<p>Dashboard</p>
-					</div>
-				</li>
-				<li className="p-5 hover:bg-[#e3effe] hover:cursor-pointer">
-					<div className="flex gap-3 items-center">
-						<BedDouble />
-						Room management
-					</div>
-				</li>
-				<li className="p-5 hover:bg-[#e3effe] hover:cursor-pointer">
-					<div className="flex gap-3 items-center">
-						<CalendarDays />
-						<p>Reservations</p>
-					</div>
-				</li>
-				<li className="p-5 hover:bg-[#e3effe] hover:cursor-pointer">
-					<div className="flex gap-3 items-center">
-						<ChartColumn />
-						<p>Reports</p>
-					</div>
-				</li>
-			</ul>
-		</div>
+		<SideBarShell>
+			<NavItem icon={LayoutDashboard} label="Dashboard" />
+			<NavItem icon={BedDouble} label="Room management" />
+			<NavItem icon={CalendarDays} label="Reservations" />
+			<NavItem icon={ChartColumn} label="Reports" />
+		</SideBarShell>
 	)
 }
