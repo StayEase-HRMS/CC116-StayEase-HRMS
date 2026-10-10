@@ -1,6 +1,6 @@
 # EaseStay Hotel Reservation & Management System
 
-Repository for the EaseStay HRMS.
+Repository for the EaseStay HRMS. Hello World!
 
 ### How to set up
 
