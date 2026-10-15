@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AdminSideBar } from "./components/sidebar";
 import PageHeader from "./components/header";
 
+import AdminTabPage from "./admin/Admin";
+
 function App() {
   return (
     <>
@@ -11,8 +13,9 @@ function App() {
         <div className="flex flex-1">
           <AdminSideBar />
 
-          <main className="min-w-0 flex-1 p-6">
+          <main className="flex-1 min-w-0 overflow-y-auto">
             {/* page content */}
+            <AdminTabPage />
           </main>
         </div>
       </div>
