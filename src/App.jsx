@@ -16,6 +16,7 @@ function App() {
         <Route path="/rooms" element={<CustomerRooms />} />
         <Route path="/chat-support" element={<CustomerChatSupport />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/users" element={<AdminPage />} />
       </Routes>
     </BrowserRouter>
   )

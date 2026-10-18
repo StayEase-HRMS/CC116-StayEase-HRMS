@@ -1,40 +1,37 @@
-import { Bed, UserRound, KeyRound, ClipboardClock, DoorOpen } from "lucide-react"
-import { ReservationsAndStatus, QuickDetailsCard, RoomAvailabilityCard } from "./components/components";
-import { AdminSideBar } from "../components/sidebar";
-import PageHeader from "../components/header";
+import { NavLink, useLocation } from 'react-router-dom';
+import { LayoutDashboard, BedDouble, CalendarDays, ChartColumn, Users, Star, KeyRound, DoorOpen } from 'lucide-react';
+import logo from '../assets/logo.svg';
+import { ReservationsAndStatus } from './components/components';
+import UserManagement from './UserManagement';
+import './admin.css';
 
 export default function AdminPage() {
-  return (
-    <main className="flex min-h-screen flex-col">
-      <PageHeader title="Admin dashboard" desc="lorem ipsum" />
-
-      <div className="flex">
-        <AdminSideBar />
-
-        <div className="flex-1 min-w-0 overflow-y-auto">
-          <div className="bg-blue-100 h-full p-5 max-w-full grid gap-5">
-            <div className="flex gap-2">
-              <QuickDetailsCard color="bg-blue-200" icon={<Bed />} cardName="TOTAL ROOMS" value="50" comment="Across all room types" />
-              <QuickDetailsCard color="bg-orange-200" icon={<UserRound />} cardName="OCCUPIED ROOMS" value="45" comment="90% Occupancy rate" />
-              <QuickDetailsCard color="bg-green-200" icon={<KeyRound />} cardName="AVAILABLE ROOMS" value="5" comment="10% Availability rate" />
-              <QuickDetailsCard color="bg-yellow-200" icon={<ClipboardClock />} cardName="TODAY'S CHECK-INS" value="50" />
-              <QuickDetailsCard color="bg-red-200" icon={<DoorOpen />} cardName="TODAY'S CHECK-OUTS" value="50" />
-            </div>
-
-            <div className="grid p-2 bg-white rounded-md">
-              <p className="text-xl">Room Availability</p>
-              <div className="p-3 flex gap-2 overflow-x-auto">
-                <RoomAvailabilityCard roomType="Standard" comment="A comfortable and practical room for a simple stay" occupied="16" available="2" />
-                <RoomAvailabilityCard roomType="Deluxe" comment="A comfortable and practical room for a simple stay" occupied="16" available="2" />
-                <RoomAvailabilityCard roomType="Executive Suit" comment="A comfortable and practical room for a simple stay" occupied="16" available="2" />
-                <RoomAvailabilityCard roomType="Family" comment="A comfortable and practical room for a simple stay" occupied="16" available="2" />
-              </div>
-            </div>
-
-            <ReservationsAndStatus />
-          </div>
-        </div>
-      </div>
-    </main>
-  )
+  const usersPage = useLocation().pathname === '/admin/users';
+  return <div className="admin-app">
+    <aside className="admin-sidebar">
+      <NavLink to="/" className="admin-brand"><img src={logo} alt="StayEase Hospitality Suite" /></NavLink>
+      <nav aria-label="Admin navigation">
+        <NavLink to="/admin" end><LayoutDashboard size={22} />Dashboard</NavLink>
+        <span title="Coming soon"><BedDouble size={22} />Room Management</span>
+        <span title="Coming soon"><CalendarDays size={22} />Reservations</span>
+        <span title="Coming soon"><ChartColumn size={22} />Reports</span>
+        <NavLink to="/admin/users"><Users size={22} />User Management</NavLink>
+        <span title="Coming soon"><Star size={22} />Reviews & ratings</span>
+      </nav>
+      <div className="admin-profile"><span className="admin-avatar">SA</span><div><strong>StayEase Admin</strong><small>Administrator · Demo</small></div></div>
+    </aside>
+    <div className="admin-main">
+      <header className="admin-heading"><h1>{usersPage ? 'User Management' : 'Dashboard'}</h1><p>{usersPage ? 'Manage guest and staff accounts, roles, and access across properties.' : 'An overview of your property, reservations, and room availability.'}</p></header>
+      <main className="admin-content">{usersPage ? <UserManagement /> : <>
+        <div className="admin-section-heading"><h2>Property overview</h2><span>Sample property data</span></div>
+        <div className="admin-stats dashboard-stats">{[
+          ['Total rooms', 50, BedDouble], ['Occupied rooms', 40, Users], ['Available rooms', 5, KeyRound], ['Pending rooms', 5, CalendarDays], ['Check-outs', 1, DoorOpen],
+        ].map(([label, value, Icon]) => <div className="admin-stat" key={label}><div><span>{label}</span><Icon size={20} /></div><strong>{value}</strong></div>)}</div>
+        <section className="admin-room-section"><div className="admin-section-heading"><h2>Room availability</h2><span>By room type</span></div><div className="admin-room-grid">{[
+          ['Standard', 16, 2, 2], ['Deluxe', 12, 1, 2], ['Executive Suite', 6, 1, 0], ['Family', 6, 1, 1],
+        ].map(([name, occupied, available, pending]) => <article className="admin-room" key={name}><BedDouble size={26} /><h3>{name}</h3><p>{occupied + available + pending} rooms total</p><div className="admin-occupancy"><span style={{ width: `${occupied / (occupied + available + pending) * 100}%` }} /></div><footer><span>{occupied} occupied</span><span>{available} available</span></footer></article>)}</div></section>
+        <ReservationsAndStatus />
+      </>}</main>
+    </div>
+  </div>;
 }
