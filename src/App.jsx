@@ -17,9 +17,11 @@ function App() {
         <Route path="/chat-support" element={<CustomerChatSupport />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin/users" element={<AdminPage />} />
+        <Route path="/admin/rooms" element={<AdminPage />} />
       </Routes>
     </BrowserRouter>
   )
 }
 
 export default App;
+

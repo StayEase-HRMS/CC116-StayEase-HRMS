@@ -3,16 +3,19 @@ import { LayoutDashboard, BedDouble, CalendarDays, ChartColumn, Users, Star, Key
 import logo from '../assets/logo.svg';
 import { ReservationsAndStatus } from './components/components';
 import UserManagement from './UserManagement';
+import RoomManagement from './RoomManagement';
 import './admin.css';
 
 export default function AdminPage() {
-  const usersPage = useLocation().pathname === '/admin/users';
+  const path = useLocation().pathname;
+  const usersPage = path === '/admin/users';
+  const roomsPage = path === '/admin/rooms';
   return <div className="admin-app">
     <aside className="admin-sidebar">
       <NavLink to="/" className="admin-brand"><img src={logo} alt="StayEase Hospitality Suite" /></NavLink>
       <nav aria-label="Admin navigation">
         <NavLink to="/admin" end><LayoutDashboard size={22} />Dashboard</NavLink>
-        <span title="Coming soon"><BedDouble size={22} />Room Management</span>
+        <NavLink to="/admin/rooms"><BedDouble size={22} />Room Management</NavLink>
         <span title="Coming soon"><CalendarDays size={22} />Reservations</span>
         <span title="Coming soon"><ChartColumn size={22} />Reports</span>
         <NavLink to="/admin/users"><Users size={22} />User Management</NavLink>
@@ -21,8 +24,8 @@ export default function AdminPage() {
       <div className="admin-profile"><span className="admin-avatar">SA</span><div><strong>StayEase Admin</strong><small>Administrator · Demo</small></div></div>
     </aside>
     <div className="admin-main">
-      <header className="admin-heading"><h1>{usersPage ? 'User Management' : 'Dashboard'}</h1><p>{usersPage ? 'Manage guest and staff accounts, roles, and access across properties.' : 'An overview of your property, reservations, and room availability.'}</p></header>
-      <main className="admin-content">{usersPage ? <UserManagement /> : <>
+      <header className="admin-heading"><h1>{usersPage ? 'User Management' : roomsPage ? 'Room Management' : 'Dashboard'}</h1><p>{usersPage ? 'Manage guest and staff accounts, roles, and access across properties.' : roomsPage ? 'Manage room details, availability, and rates in one place.' : 'An overview of your property, reservations, and room availability.'}</p></header>
+      <main className="admin-content">{usersPage ? <UserManagement /> : roomsPage ? <RoomManagement /> : <>
         <div className="admin-section-heading"><h2>Property overview</h2><span>Sample property data</span></div>
         <div className="admin-stats dashboard-stats">{[
           ['Total rooms', 50, BedDouble], ['Occupied rooms', 40, Users], ['Available rooms', 5, KeyRound], ['Pending rooms', 5, CalendarDays], ['Check-outs', 1, DoorOpen],
@@ -35,3 +38,4 @@ export default function AdminPage() {
     </div>
   </div>;
 }
+
