@@ -119,11 +119,45 @@ function RoomStatusOverview() {
   )
 }
 
-export default function ReservationsAndStatus() {
+export function ReservationsAndStatus() {
   return (
     <div className="flex gap-3 flex-col lg:flex-row">
       <ReservationsTable />
       <RoomStatusOverview />
+    </div>
+  )
+}
+
+export function QuickDetailsCard({ color, icon, cardName, value, comment }) {
+  return (
+    <div className="flex-1 min-w-0 p-4 rounded-md bg-white shadow-md">
+      <div className="flex justify-between">
+        <div>
+          <p className="pt-1 pb-2 text-sm">{cardName}</p>
+          <p className="pb-2 text-2xl font-bold">{value}</p>
+        </div>
+
+        <div className={`${color} w-fit h-fit p-2 rounded-xl`}>
+          {icon}
+        </div>
+      </div>
+
+      <p className="border-t-1 border-gray-300 pt-2 text-sm text-gray-400 italic text-right">{comment}</p>
+    </div>
+  )
+}
+
+export function RoomAvailabilityCard({ roomType, comment, occupied, available }) {
+  return (
+    <div className="w-80 shrink-0 p-3 grid gap-1 rounded-md bg-white shadow-md border-1 border-gray-200">
+      <div className="w-full h-30 rounded-md bg-gray-200"></div>
+      <p className="text-xl font-bold">{roomType}</p>
+      <p className="text-sm">{comment}</p>
+
+      <div className="flex justify-between mt-2">
+        <div className="w-fit h-fit p-1 pr-2 pl-2 rounded-xl bg-yellow-100">{occupied} occupied</div>
+        <div className="w-fit h-fit p-1 pr-2 pl-2 rounded-xl bg-green-200">{available} available</div>
+      </div>
     </div>
   )
 }

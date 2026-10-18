@@ -1,5 +1,4 @@
-import logo from "../assets/logo.png"
-import { Star, BedDouble, CalendarDays, ChartColumn, LayoutDashboard } from "lucide-react";
+import { Star, BedDouble, CalendarDays, ChartColumn, LayoutDashboard, Users } from "lucide-react";
 
 function SideBarShell({ children }) {
 	return (
@@ -11,13 +10,15 @@ function SideBarShell({ children }) {
 	)
 }
 
-function NavItem({ icon: Icon, label, ...iconProps }) {
+function NavItem({ icon: Icon, label, link, ...iconProps }) {
 	return (
 		<li className="p-5 hover:bg-[#e3effe] hover:cursor-pointer">
-			<div className="flex gap-3 items-center">
-				<Icon {...iconProps} />
-				<p>{label}</p>
-			</div>
+			<a href={link}>
+				<div className="flex gap-3 items-center">
+					<Icon {...iconProps} />
+					<p>{label}</p>
+				</div>
+			</a>
 		</li>
 	)
 }
@@ -41,6 +42,16 @@ export function StaffSideBar() {
 			<NavItem icon={BedDouble} label="Room management" />
 			<NavItem icon={CalendarDays} label="Reservations" />
 			<NavItem icon={ChartColumn} label="Reports" />
+		</SideBarShell>
+	)
+}
+
+export function CustomerSideBar() {
+	return (
+		<SideBarShell>
+			<NavItem icon={BedDouble} label="Rooms and Acomodations"/>
+			<NavItem icon={CalendarDays} label="My reservations" link="/my-reservation" />
+			<NavItem icon={Users} label="Customer Support" link="/chat-support" />
 		</SideBarShell>
 	)
 }
