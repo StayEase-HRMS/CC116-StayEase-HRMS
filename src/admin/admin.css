@@ -76,3 +76,37 @@
 @media(max-width:1200px) { .admin-sidebar { width:210px; } .admin-stat { padding:16px; } .dashboard-stats { grid-template-columns:repeat(3,minmax(0,1fr)); } .admin-room-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:900px) { .admin-sidebar { width:180px; } .admin-sidebar nav a,.admin-sidebar nav > span { padding:12px; font-size:12px; } .admin-content { padding:16px; } .admin-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } .admin-filters { flex-wrap:wrap; } .admin-search { flex-basis:100%; } .admin-heading { padding:18px; } .admin-heading h1 { font-size:26px; } }
 @media(max-width:600px) { .admin-app { flex-direction:column; } .admin-sidebar { width:100%; border-right:0; } .admin-brand { height:55px; } .admin-brand img { width:120px; } .admin-sidebar nav { display:flex; padding:7px; gap:4px; } .admin-sidebar nav a { white-space:nowrap; border-radius:8px; padding:9px; } .admin-sidebar nav > span,.admin-profile { display:none; } .admin-main { min-height:0; } .admin-heading { min-height:auto; padding:14px 16px; } .admin-heading h1 { font-size:23px; } .admin-heading p { font-size:12px; } .admin-toolbar { align-items:flex-start; } .admin-toolbar > span { max-width:150px; } .admin-primary { white-space:nowrap; font-size:13px; } .admin-room-grid { grid-template-columns:1fr; } .admin-stat strong { font-size:32px; } .admin-stat span { font-size:10px; } .admin-stat svg { padding:6px; width:16px; height:16px; } .admin-pagination { flex-wrap:wrap; font-size:12px; } .admin-filters { gap:8px; padding:12px; } .admin-filters select { font-size:12px; padding:12px 8px; } }
+
+.account-modal { position:fixed; inset:0; margin:auto; width:min(674px,calc(100% - 32px)); max-height:90dvh; overflow:auto; padding:0; border:1px solid #edf0f6; border-radius:20px; background:#fff; color:#172033; box-shadow:0 24px 60px #17203330; font-family:Arial,sans-serif; }
+.account-modal::backdrop { background:#24334b30; }
+.account-modal-header { display:flex; align-items:flex-start; gap:10px; padding:25px 28px 20px; border-bottom:1px solid #f0f3f8; }
+.account-modal-icon { padding:8px; border-radius:11px; background:#fff7e9; color:#d49d38; }
+.account-modal-header h2 { font-size:22px; font-weight:700; line-height:1.4; }
+.account-modal-header p { font-size:14px; color:#647a9b; margin-top:5px; line-height:1.5; }
+.account-close { margin-left:auto; color:#8da0bb; padding:7px; cursor:pointer; border-radius:8px; }
+.account-close:hover { background:#f0f4fa; }
+.account-form-body { padding:26px 28px 20px; }
+.account-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.account-form-grid label,.account-department > span { display:block; font-size:14px; font-weight:600; color:#35455f; }
+.account-form-grid label > span { color:#e7425b; }
+.account-form-grid input,.account-form-grid select { display:block; margin-top:7px; width:100%; min-width:0; border:1px solid #c6d3e7; border-radius:8px; padding:10px 13px; height:40px; font-size:14px; font-weight:400; background:white; color:#27364d; }
+.account-form-grid input::placeholder { color:#90a4c3; }
+.account-department > div { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:10px; }
+.account-department input[name="employeeId"] { font-family:monospace; padding-inline:9px; }
+.account-properties { margin-top:20px; border:0; }
+.account-properties legend { font-size:14px; color:#35455f; font-weight:600; margin-bottom:8px; }
+.account-properties > div { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.account-properties label { display:flex; align-items:center; gap:9px; padding:9px; border:1px solid #dce4f0; border-radius:9px; font-size:13px; color:#35455f; cursor:pointer; }
+.account-properties input { width:20px; height:20px; accent-color:#d39e3b; flex-shrink:0; }
+.account-modal :disabled { opacity:1; cursor:default; -webkit-text-fill-color:#35455f; }
+.account-modal input:read-only,.account-modal select:disabled { background:#f8faff; }
+.account-meta { margin-top:15px; font-size:12px; color:#72829b; overflow-wrap:anywhere; }
+.account-form-error { color:#b42338; font-size:13px; margin-top:14px; }
+.account-modal-footer { margin:0 28px; padding:20px 0 28px; border-top:1px solid #f0f3f8; display:flex; justify-content:flex-end; gap:12px; align-items:center; }
+.account-secondary,.account-submit { border-radius:8px; padding:10px 19px; font-size:14px; font-weight:600; cursor:pointer; }
+.account-secondary { border:1px solid #dce4f0; color:#35455f; background:white; }
+.account-submit { background:#d39e3b; color:white; border:1px solid #d39e3b; }
+.account-submit:hover { background:#b7852d; }
+.account-status-action { margin-right:auto; color:#a54147; font-size:12px; cursor:pointer; }
+.account-modal :focus-visible { outline:2px solid #6488bc; outline-offset:3px; }
+@media(max-width:560px) { .account-modal-header { padding:20px; } .account-modal-header h2 { font-size:19px; } .account-form-body { padding:20px; } .account-form-grid { grid-template-columns:1fr; } .account-properties > div { grid-template-columns:1fr; } .account-modal-footer { margin:0 20px; flex-wrap:wrap; } .account-status-action { flex-basis:100%; text-align:left; } }
