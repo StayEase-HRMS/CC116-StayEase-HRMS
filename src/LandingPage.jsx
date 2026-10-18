@@ -5,7 +5,6 @@ import {
   Award,
   CalendarDays,
   ChartColumn,
-  ChevronDown,
   ConciergeBell,
   Flower2,
   HeartPulse,
@@ -415,7 +414,6 @@ function BookingBar() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-0 top-0.5 h-4 w-4 text-slate-500" />
             </span>
             <span className="mt-0.5 block text-[11px] font-semibold text-[#a8761a]">
               {dest.tagline}
@@ -464,7 +462,6 @@ function BookingBar() {
                   <option key={g}>{g}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-0 top-0.5 h-4 w-4 text-slate-500" />
             </span>
           </label>
 
@@ -824,3 +821,4 @@ export default function LandingPage() {
     </div>
   );
 }
+
