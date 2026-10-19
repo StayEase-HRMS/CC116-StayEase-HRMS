@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { BedDouble, CalendarDays, DoorOpen, KeyRound, Users } from "lucide-react";
-import { AdminSideBar } from "../components/sidebar";
+import { AdminSideBar, StaffSideBar } from "../components/sidebar";
 import PageHeader from "../components/header";
 import { ReservationsAndStatus } from "./components/components";
 import UserManagement from "./UserManagement";
@@ -165,11 +165,11 @@ export default function AdminPage({ role = "admin" }) {
   const header = getHeader(page, isStaff);
 
   return (
-    <main className="flex min-h-screen flex-col">
+    <main className="management-shell flex min-h-screen flex-col">
       <PageHeader title={header.title} desc={header.desc} />
 
-      <section className="flex">
-        <AdminSideBar />
+      <section className="flex flex-1">
+        {isStaff ? <StaffSideBar /> : <AdminSideBar />}
 
         <div className="flex w-full min-w-0 flex-col gap-4.5 bg-[#eef1ff] p-4 text-[#15212b] min-[901px]:p-6">
           {page === "dashboard" && <DashboardOverview />}

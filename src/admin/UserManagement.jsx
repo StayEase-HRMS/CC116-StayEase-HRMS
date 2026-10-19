@@ -1,6 +1,7 @@
+import Pagination from './components/Pagination';
 import { useState } from 'react';
 import AccountModal from './AccountModal';
-import { Users, Briefcase, BadgeCheck, Ban, Plus, Search, RotateCcw, ChevronLeft, ChevronRight, Eye, Pencil } from 'lucide-react';
+import { Users, Briefcase, BadgeCheck, Ban, Plus, Search, RotateCcw, Eye, Pencil } from 'lucide-react';
 
 const initialUsers = [
   { id: 'G001', name: 'Elena Rostova', email: 'elena.rostova@gmail.com', role: 'Guest', status: 'Active', created: '2023-11-04' },
@@ -19,9 +20,9 @@ export default function UserManagement() {
   const [selected, setSelected] = useState(null);
   const [mode, setMode] = useState('view');
   const filtered = accounts.filter(a => [a.name, a.id, a.email].join(' ').toLowerCase().includes(search.toLowerCase()) && (role === 'All Roles' || a.role === role) && (status === 'All Statuses' || a.status === status));
-  const pages = Math.max(1, Math.ceil(filtered.length / 10));
+  const pages = Math.max(1, Math.ceil(filtered.length / 5));
   const currentPage = Math.min(page, pages);
-  const visible = filtered.slice((currentPage - 1) * 10, currentPage * 10);
+  const visible = filtered.slice((currentPage - 1) * 5, currentPage * 5);
   function reset() { setSearch(''); setRole('All Roles'); setStatus('All Statuses'); setPage(1); }
   function saveAccount(values) {
     const editingId = mode === 'edit' ? selected.id : null;
@@ -46,7 +47,7 @@ export default function UserManagement() {
     <section className="admin-accounts" aria-label="User accounts">
       <div className="admin-filters"><label className="admin-search"><Search size={20} /><input aria-label="Search accounts" placeholder="Search by name, ID or email..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} /></label><select aria-label="Filter by role" value={role} onChange={e => { setRole(e.target.value); setPage(1); }}>{['All Roles', 'Guest', 'Staff'].map(v => <option key={v}>{v}</option>)}</select><select aria-label="Filter by status" value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}>{['All Statuses', 'Active', 'Suspended'].map(v => <option key={v}>{v}</option>)}</select><button className="admin-icon-button" aria-label="Reset filters" onClick={reset}><RotateCcw size={19} /></button></div>
       <div className="admin-table-scroll"><table className="admin-user-table"><thead><tr>{['Account', 'Email', 'Role', 'Status', 'Date created', 'Actions'].map(label => <th key={label}>{label}</th>)}</tr></thead><tbody>{visible.map(a => <tr key={a.id}><td><strong>{a.name}</strong></td><td>{a.email}</td><td><span className={'admin-badge ' + a.role.toLowerCase()}>{a.role}</span></td><td><span className={'admin-badge ' + a.status.toLowerCase()}>• {a.status}</span></td><td>{dateLabel(a.created)}</td><td><button className="admin-icon-button" aria-label={'View ' + a.name} onClick={() => { setMode('view'); setSelected(a); }}><Eye size={18} /></button><button className="admin-icon-button" aria-label={'Edit ' + a.name} onClick={() => { setMode('edit'); setSelected(a); }}><Pencil size={17} /></button></td></tr>)}</tbody></table>{!visible.length && <p className="admin-empty">No accounts match your search. Try changing the filters.</p>}</div>
-      <footer className="admin-pagination"><span>Showing {filtered.length ? (currentPage - 1) * 10 + 1 : 0}–{Math.min(currentPage * 10, filtered.length)} of {filtered.length} accounts</span><div><button disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}><ChevronLeft size={16} aria-hidden="true" />Previous</button><span className="admin-page-number">{currentPage}</span><button disabled={currentPage === pages} onClick={() => setPage(currentPage + 1)}>Next<ChevronRight size={16} aria-hidden="true" /></button></div></footer>
+      <Pagination page={currentPage} total={filtered.length} pageSize={5} onChange={setPage} noun="accounts" />
     </section>
     {selected && <AccountModal key={mode + (selected.id ?? 'new')} mode={mode} account={selected === 'add' ? null : selected} onClose={() => setSelected(null)} onSave={saveAccount} onEdit={() => setMode('edit')} onToggleStatus={() => {
       setAccounts(accounts.map(a => a.id === selected.id ? { ...a, status: a.status === 'Active' ? 'Suspended' : 'Active' } : a));
