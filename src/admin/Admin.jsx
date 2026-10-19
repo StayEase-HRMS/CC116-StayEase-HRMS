@@ -164,8 +164,8 @@ export default function AdminPage({ role = "admin" }) {
   const header = getHeader(page, isStaff);
 
   return (
-    <main className="flex min-h-screen flex-col">
-      <PageHeader title={header.title} desc={header.desc} management />
+    <main className="management-shell flex min-h-screen flex-col">
+      <PageHeader title={header.title} desc={header.desc} />
 
       <section className="flex flex-1">
         {isStaff ? <StaffSideBar /> : <AdminSideBar />}

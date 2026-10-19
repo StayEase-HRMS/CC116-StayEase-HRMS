@@ -1,3 +1,5 @@
+import Pagination from './components/Pagination';
+import useRoomPageSize from './useRoomPageSize';
 import { useEffect, useRef, useState } from 'react';
 import { Plus, Search, RotateCcw, X, ImagePlus, ChevronRight, BedDouble, Check } from 'lucide-react';
 import roomPhoto from '../assets/room_1.jpg';
@@ -118,13 +120,17 @@ function StatusForm({ room, onSave, onClose }) {
 
 export default function RoomManagement({ readOnly = false }) {
   const [rooms, setRooms] = useState(initialRooms);
+  const [page, setPage] = useState(1);
+  const pageSize = useRoomPageSize();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('All');
   const [category, setCategory] = useState('All Categories');
   const [modal, setModal] = useState(null);
   const [removed, setRemoved] = useState(null);
   const selected = rooms.find(room => room.id === modal?.id);
-  const visible = rooms.filter(room => (room.name + ' ' + room.category).toLowerCase().includes(search.trim().toLowerCase()) && (status === 'All' || room.status === status) && (category === 'All Categories' || room.category === category));
+  const filtered = rooms.filter(room => (room.name + ' ' + room.category).toLowerCase().includes(search.trim().toLowerCase()) && (status === 'All' || room.status === status) && (category === 'All Categories' || room.category === category));
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(filtered.length / pageSize)));
+  const visible = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const close = () => setModal(null);
   function save(values) {
     if (readOnly) return 'Staff access is view-only.';
@@ -132,17 +138,17 @@ export default function RoomManagement({ readOnly = false }) {
     if (selected) setRooms(rooms.map(room => room.id === selected.id ? { ...room, ...values } : room));
     else {
       setRooms([...rooms, { ...values, id: crypto.randomUUID(), floor: '', sanitized: 'Not recorded', note: '' }]);
-      setSearch(''); setStatus('All'); setCategory('All Categories');
+      setSearch(''); setStatus('All'); setCategory('All Categories'); setPage(1);
     }
     close(); return null;
   }
   return <>
     <div className="admin-toolbar"><span>Demo inventory · changes reset when you leave this page</span>{!readOnly && <button className="admin-primary" onClick={() => setModal({ mode: 'add' })}><Plus size={18} />Add Room</button>}</div>
-    <div className="room-filters"><label className="admin-search"><Search size={18} /><input aria-label="Search rooms" placeholder="Search room number or category..." value={search} onChange={e => setSearch(e.target.value)} /></label><label>Status:<select value={status} onChange={e => setStatus(e.target.value)}>{['All', ...Object.keys(statusDescriptions)].map(s => <option key={s}>{s}</option>)}</select></label><label>Category:<select value={category} onChange={e => setCategory(e.target.value)}>{['All Categories', ...categories].map(c => <option key={c}>{c}</option>)}</select></label><button className="admin-icon-button" aria-label="Reset room filters" onClick={() => { setSearch(''); setStatus('All'); setCategory('All Categories'); }}><RotateCcw size={18} /></button></div>
+    <div className="room-filters"><label className="admin-search"><Search size={18} /><input aria-label="Search rooms" placeholder="Search room number or category..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} /></label><label>Status:<select value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}>{['All', ...Object.keys(statusDescriptions)].map(s => <option key={s}>{s}</option>)}</select></label><label>Category:<select value={category} onChange={e => { setCategory(e.target.value); setPage(1); }}>{['All Categories', ...categories].map(c => <option key={c}>{c}</option>)}</select></label><button className="admin-icon-button" aria-label="Reset room filters" onClick={() => { setSearch(''); setStatus('All'); setCategory('All Categories'); setPage(1); }}><RotateCcw size={18} /></button></div>
     {removed && <div className="room-undo" role="status"><span>{removed.name} removed.</span><button onClick={() => { setRooms([...rooms, removed]); setRemoved(null); }}>Undo</button></div>}
-    <div className="room-inventory">{visible.map(room => <article className="room-inventory-card" key={room.id}><div className="room-card-summary">{room.photos[0] ? <img src={room.photos[0]} alt={room.name} /> : <div className="room-no-photo"><BedDouble size={30} /></div>}<div><h2>{room.name}</h2><p>{room.category}</p><strong>{currency(room.price)}</strong><small> / night</small></div><StatusBadge status={room.status} /></div><footer><button aria-label={'View ' + room.name} onClick={() => setModal({ mode: 'view', id: room.id })}>View <ChevronRight size={14} /></button></footer></article>)}</div>
+    <section className="room-paged-section" aria-label="Room inventory"><div className="room-page-body"><div className="room-inventory">{visible.map(room => <article className="room-inventory-card" key={room.id}><div className="room-card-summary">{room.photos[0] ? <img src={room.photos[0]} alt={room.name} /> : <div className="room-no-photo"><BedDouble size={30} /></div>}<div><h2>{room.name}</h2><p>{room.category}</p><strong>{currency(room.price)}</strong><small> / night</small></div><StatusBadge status={room.status} /></div><footer><button aria-label={'View ' + room.name} onClick={() => setModal({ mode: 'view', id: room.id })}>View <ChevronRight size={14} /></button></footer></article>)}</div>
     {!visible.length && <p className="admin-empty">No rooms match your filters.</p>}
-    <div className="room-count">Showing {visible.length} of {rooms.length} rooms</div>
+    </div><Pagination page={currentPage} total={filtered.length} pageSize={pageSize} onChange={setPage} noun="rooms" /></section>
     {!readOnly && (modal?.mode === 'add' || (modal?.mode === 'edit' && selected)) && <RoomForm key={modal.mode + (selected?.id ?? '')} room={selected} onSave={save} onClose={close} />}
     {modal?.mode === 'view' && selected && <RoomView readOnly={readOnly} room={selected} onClose={close} onEdit={() => setModal({ mode: 'edit', id: selected.id })} onStatus={() => setModal({ mode: 'status', id: selected.id })} onRemove={() => setModal({ mode: 'remove', id: selected.id })} />}
     {!readOnly && modal?.mode === 'status' && selected && <StatusForm room={selected} onClose={() => setModal({ mode: 'view', id: selected.id })} onSave={(nextStatus, note) => { setRooms(rooms.map(room => room.id === selected.id ? { ...room, status: nextStatus, note } : room)); setModal({ mode: 'view', id: selected.id }); }} />}

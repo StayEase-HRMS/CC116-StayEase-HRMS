@@ -38,14 +38,14 @@
 .admin-occupancy { height:6px; border-radius:8px; background:#e3f3e9; margin:18px 0 12px; overflow:hidden; }
 .admin-occupancy span { display:block; height:100%; background:#d7ac67; }
 .admin-room footer { display:flex; justify-content:space-between; gap:8px; font-size:11px; color:#706148; }
-.admin-accounts { flex:1; min-height:380px; display:flex; flex-direction:column; border-radius:15px; background:#fff; overflow:hidden; }
+.admin-accounts { flex:none; display:flex; flex-direction:column; border-radius:15px; background:#fff; }
 .admin-filters { background:#e3eeff; display:flex; align-items:center; gap:12px; padding:18px; }
 .admin-search { display:flex; flex:1; align-items:center; gap:12px; background:white; border-radius:10px; padding:12px; min-width:140px; color:#625747; }
 .admin-search input { width:100%; min-width:0; outline:none; background:transparent; font-size:14px; }
 .admin-filters select { border:0; background:white; padding:13px 12px; border-radius:10px; font-size:14px; }
 .admin-icon-button { display:inline-flex; align-items:center; justify-content:center; padding:10px; border:0; border-radius:9px; background:white; color:#615544; cursor:pointer; }
 .admin-icon-button:hover { background:#eef3fa; }
-.admin-table-scroll { overflow:auto; flex:1; }
+.admin-table-scroll { overflow-x:auto; height:420px; flex:none; }
 .admin-user-table { border-collapse:collapse; width:100%; white-space:nowrap; text-align:left; font-size:14px; }
 .admin-user-table th { background:#cfe4ff; text-transform:uppercase; letter-spacing:.06em; font-size:12px; font-weight:600; padding:14px 22px; color:#574d40; }
 .admin-user-table td { padding:12px 22px; }
@@ -56,8 +56,10 @@
 .admin-badge.active { background:#d6eddf; color:#14603a; }
 .admin-badge.suspended { background:#ffe4e6; color:#a13445; }
 .admin-pagination { padding:18px; display:flex; justify-content:space-between; align-items:center; gap:16px; font-size:13px; color:#615544; }
-.admin-pagination > div { display:flex; align-items:center; gap:18px; }
-.admin-pagination button { cursor:pointer; }
+.admin-pagination > nav { display:flex; align-items:center; gap:10px; }
+.admin-pagination button { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid #dce4ef; border-radius:8px; background:white; cursor:pointer; }
+.admin-pagination button:not(:disabled):hover { background:#e3effe; }
+.admin-pagination button:focus-visible { outline:2px solid #4b6b95; outline-offset:2px; }
 .admin-pagination button:disabled { opacity:.4; cursor:default; }
 .admin-page-number { background:#d6a653; color:white; padding:9px 13px; border-radius:8px; }
 .admin-empty { padding:40px; text-align:center; color:#697589; }
@@ -110,3 +112,21 @@
 .account-status-action { margin-right:auto; color:#a54147; font-size:12px; cursor:pointer; }
 .account-modal :focus-visible { outline:2px solid #6488bc; outline-offset:3px; }
 @media(max-width:560px) { .account-modal-header { padding:20px; } .account-modal-header h2 { font-size:19px; } .account-form-body { padding:20px; } .account-form-grid { grid-template-columns:1fr; } .account-properties > div { grid-template-columns:1fr; } .account-modal-footer { margin:0 20px; flex-wrap:wrap; } .account-status-action { flex-basis:100%; text-align:left; } }
+
+/* Keep list space stable; only the document scrolls vertically. Dialogs remain scrollable. */
+.management-shell .admin-filters { flex-wrap:wrap; border-radius:15px 15px 0 0; }
+.management-shell .admin-pagination { flex-shrink:0; }
+.management-shell .admin-stats { grid-template-columns:repeat(4,minmax(0,1fr)); }
+@media(max-width:900px) {
+  .management-shell .admin-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:650px) {
+  .management-shell .management-sidebar { width:64px; }
+  .management-shell .management-nav-label { display:none; }
+  .management-shell > header > div:first-child { width:64px; padding:8px; }
+  .management-shell > header > div:last-child { min-width:0; padding:16px; }
+  .management-shell .admin-pagination { padding:12px; }
+  .management-shell .admin-table-scroll,
+  .management-shell .booking-table-scroll { height:auto; min-height:420px; }
+}
+.management-shell .room-photo-previews button:focus-visible { outline:2px solid #4b6b95; outline-offset:2px; }
