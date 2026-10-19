@@ -5,6 +5,7 @@ const ADMIN_LINKS = [
 	{ icon: BedDouble, label: "Room management", link: "/admin/rooms" },
 	{ icon: CalendarDays, label: "Reservations", link: "/admin/reservations" },
 	{ icon: ChartColumn, label: "Reports", link: "/admin/reports" },
+	{ icon: Users, label: "User Management", link: "/admin/users" },
 	{ icon: Star, label: "Reviews & ratings", link: "/admin/reviews" },
 ];
 
@@ -12,7 +13,7 @@ const STAFF_LINKS = [
 	{ icon: LayoutDashboard, label: "Dashboard", link: "/staff" },
 	{ icon: BedDouble, label: "Room management", link: "/staff/rooms" },
 	{ icon: CalendarDays, label: "Reservations", link: "/staff/reservations" },
-	{ icon: ChartColumn, label: "Reports", link: "/staff/reports" },
+	{ icon: Users, label: "Customer Support", link: "/staff/support" },
 ];
 
 const CUSTOMER_LINKS = [
@@ -21,9 +22,9 @@ const CUSTOMER_LINKS = [
 	{ icon: Users, label: "Customer Support", link: "/chat-support" },
 ];
 
-function SideBarShell({ children }) {
+function SideBarShell({ children, management }) {
 	return (
-		<aside className="w-[200px] shrink-0 border-r-2 border-gray-200 bg-white text-left text-sm">
+		<aside className={`${management ? "w-16 sm:w-[200px]" : "w-[200px]"} shrink-0 border-r-2 border-gray-200 bg-white text-left text-sm`}>
 			<div className="sticky top-0 h-screen">
 				<ul className="grid">{children}</ul>
 			</div>
@@ -31,29 +32,29 @@ function SideBarShell({ children }) {
 	);
 }
 
-function NavItem({ icon: Icon, label, link, ...iconProps }) {
+function NavItem({ icon: Icon, label, link, management, ...iconProps }) {
 	return (
 		<li className="p-5 hover:bg-[#e3effe] hover:cursor-pointer">
-			<a href={link}>
+			<a href={link} aria-label={label} title={label}>
 				<div className="flex gap-3 items-center">
-					<Icon {...iconProps} />
-					<p>{label}</p>
+					<Icon className="shrink-0" {...iconProps} />
+					<p className={management ? "hidden sm:block" : ""}>{label}</p>
 				</div>
 			</a>
 		</li>
 	);
 }
 
-function SideBar({ links }) {
+function SideBar({ links, management = false }) {
 	return (
-		<SideBarShell>
+		<SideBarShell management={management}>
 			{links.map((item) => (
-				<NavItem key={item.label} {...item} />
+				<NavItem key={item.label} {...item} management={management} />
 			))}
 		</SideBarShell>
 	);
 }
 
-export const AdminSideBar = () => <SideBar links={ADMIN_LINKS} />;
-export const StaffSideBar = () => <SideBar links={STAFF_LINKS} />;
+export const AdminSideBar = () => <SideBar links={ADMIN_LINKS} management />;
+export const StaffSideBar = () => <SideBar links={STAFF_LINKS} management />;
 export const CustomerSideBar = () => <SideBar links={CUSTOMER_LINKS} />;

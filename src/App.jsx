@@ -16,6 +16,8 @@ function App() {
         <Route path="/rooms" element={<CustomerRooms />} />
         <Route path="/chat-support" element={<CustomerChatSupport />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/reviews" element={<AdminPage />} />
+        <Route path="/admin/reports" element={<AdminPage />} />
         <Route path="/admin/users" element={<AdminPage />} />
         <Route path="/admin/rooms" element={<AdminPage />} />
         <Route path="/admin/reservations" element={<AdminPage />} />
