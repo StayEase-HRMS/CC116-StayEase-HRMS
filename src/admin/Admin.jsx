@@ -1,49 +1,184 @@
-import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BedDouble, CalendarDays, ChartColumn, Users, Star, KeyRound, DoorOpen } from 'lucide-react';
-import logo from '../assets/logo.svg';
-import { ReservationsAndStatus } from './components/components';
-import UserManagement from './UserManagement';
-import RoomManagement from './RoomManagement';
-import ReservationManagement from './ReservationManagement';
-import './admin.css';
+import { useLocation } from "react-router-dom";
+import { BedDouble, CalendarDays, DoorOpen, KeyRound, Users } from "lucide-react";
+import { AdminSideBar } from "../components/sidebar";
+import PageHeader from "../components/header";
+import { ReservationsAndStatus } from "./components/components";
+import UserManagement from "./UserManagement";
+import RoomManagement from "./RoomManagement";
+import ReservationManagement from "./ReservationManagement";
+// Still needed by UserManagement / RoomManagement / ReservationManagement until they're migrated to Tailwind.
+import "./admin.css";
 
-export default function AdminPage({ role = 'admin' }) {
-  const path = useLocation().pathname;
-  const staff = role === 'staff';
-  const base = staff ? '/staff' : '/admin';
-  const supportPage = staff && path === base + '/support';
-  const usersPage = !staff && path === base + '/users';
-  const roomsPage = path === base + '/rooms';
-  const reservationsPage = path === base + '/reservations';
-  return <div className="admin-app">
-    <aside className="admin-sidebar">
-      <NavLink to="/" className="admin-brand"><img src={logo} alt="StayEase Hospitality Suite" /></NavLink>
-      <nav aria-label={staff ? "Staff navigation" : "Admin navigation"}>
-        <NavLink to={base} end><LayoutDashboard size={22} />Dashboard</NavLink>
-        <NavLink to={base + "/rooms"}><BedDouble size={22} />Room Management</NavLink>
-        <NavLink to={base + "/reservations"}><CalendarDays size={22} />Reservations</NavLink>
-        {!staff && <><span title="Coming soon"><ChartColumn size={22} />Reports</span>
-        <NavLink to="/admin/users"><Users size={22} />User Management</NavLink>
-        <span title="Coming soon"><Star size={22} />Reviews & ratings</span></>}
-        {staff && <NavLink to={base + "/support"}><Users size={22} />Customer Support</NavLink>}
-      </nav>
-      <div className="admin-profile"><span className="admin-avatar">SA</span><div><strong>StayEase {staff ? "Staff" : "Admin"}</strong><small>{staff ? "Staff" : "Administrator"} · Demo</small></div></div>
-    </aside>
-    <div className="admin-main">
-      <header className="admin-heading"><h1>{usersPage ? 'User Management' : roomsPage ? 'Room Management' : reservationsPage ? 'Reservations' : supportPage ? 'Customer Support' : 'Dashboard'}</h1><p>{usersPage ? 'Manage guest and staff accounts, roles, and access across properties.' : roomsPage ? (staff ? 'View room statuses, availability, and housekeeping information.' : 'Manage room details, availability, and rates in one place.') : reservationsPage ? (staff ? 'View guest bookings and their status.' : 'Track and manage all guest bookings and their status.') : supportPage ? 'Customer support workspace.' : 'An overview of your property, reservations, and room availability.'}</p></header>
-      <main className="admin-content">{usersPage ? <UserManagement /> : roomsPage ? <RoomManagement key={role} readOnly={staff} /> : reservationsPage ? <ReservationManagement key={role} readOnly={staff} /> : supportPage ? <section className="admin-room-section"><h2 className="text-lg font-semibold">Customer Support</h2><p className="mt-3 text-sm text-slate-500">No support conversations are connected yet.</p></section> : <>
-        <div className="admin-section-heading"><h2>Property overview</h2><span>Sample property data</span></div>
-        <div className="admin-stats dashboard-stats">{[
-          ['Total rooms', 50, BedDouble], ['Occupied rooms', 40, Users], ['Available rooms', 5, KeyRound], ['Pending rooms', 5, CalendarDays], ['Check-outs', 1, DoorOpen],
-        ].map(([label, value, Icon]) => <div className="admin-stat" key={label}><div><span>{label}</span><Icon size={20} /></div><strong>{value}</strong></div>)}</div>
-        <section className="admin-room-section"><div className="admin-section-heading"><h2>Room availability</h2><span>By room type</span></div><div className="admin-room-grid">{[
-          ['Standard', 16, 2, 2], ['Deluxe', 12, 1, 2], ['Executive Suite', 6, 1, 0], ['Family', 6, 1, 1],
-        ].map(([name, occupied, available, pending]) => <article className="admin-room" key={name}><BedDouble size={26} /><h3>{name}</h3><p>{occupied + available + pending} rooms total</p><div className="admin-occupancy"><span style={{ width: `${occupied / (occupied + available + pending) * 100}%` }} /></div><footer><span>{occupied} occupied</span><span>{available} available</span></footer></article>)}</div></section>
-        <ReservationsAndStatus />
-      </>}</main>
+/* ---------- data ---------- */
+
+const STAT_ICON_TONES = {
+  default: "bg-[#eef4ff] text-[#4b6b95]",
+  amber: "bg-[#fff4df] text-[#956719]",
+  red: "bg-[#fff0f1] text-[#bd3343]",
+};
+
+const STATS_DATA = [
+  { label: "Total rooms", value: 50, icon: BedDouble, tone: "default" },
+  { label: "Occupied rooms", value: 40, icon: Users, tone: "default" },
+  { label: "Available rooms", value: 5, icon: KeyRound, tone: "amber" },
+  { label: "Pending rooms", value: 5, icon: CalendarDays, tone: "red" },
+  { label: "Check-outs", value: 1, icon: DoorOpen, tone: "default" },
+];
+
+const ROOM_TYPES = [
+  { name: "Standard", occupied: 16, available: 2, pending: 2 },
+  { name: "Deluxe", occupied: 12, available: 1, pending: 2 },
+  { name: "Executive Suite", occupied: 6, available: 1, pending: 0 },
+  { name: "Family", occupied: 6, available: 1, pending: 1 },
+];
+
+/* ---------- helpers ---------- */
+
+const getPage = (pathname, basePath, isStaff) => {
+  if (pathname === `${basePath}/rooms`) return "rooms";
+  if (pathname === `${basePath}/reservations`) return "reservations";
+  if (!isStaff && pathname === `${basePath}/users`) return "users";
+  if (isStaff && pathname === `${basePath}/support`) return "support";
+  return "dashboard";
+};
+
+const getHeader = (page, isStaff) =>
+  ({
+    users: {
+      title: "User Management",
+      desc: "Manage guest and staff accounts, roles, and access across properties.",
+    },
+    rooms: {
+      title: "Room Management",
+      desc: isStaff
+        ? "View room statuses, availability, and housekeeping information."
+        : "Manage room details, availability, and rates in one place.",
+    },
+    reservations: {
+      title: "Reservations",
+      desc: isStaff
+        ? "View guest bookings and their status."
+        : "Track and manage all guest bookings and their status.",
+    },
+    support: {
+      title: "Customer Support",
+      desc: "Customer support workspace.",
+    },
+    dashboard: {
+      title: "Dashboard",
+      desc: "An overview of your property, reservations, and room availability.",
+    },
+  })[page];
+
+/* ---------- components ---------- */
+
+function SectionHeading({ title, note }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <h2 className="text-lg font-semibold">{title}</h2>
+      {note && <span className="text-xs text-[#697589]">{note}</span>}
     </div>
-  </div>;
+  );
 }
 
+function StatCard({ label, value, icon: Icon, tone }) {
+  return (
+    <div className="rounded-[15px] bg-white p-4 min-[1201px]:px-6 min-[1201px]:py-5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[10px] font-semibold tracking-[0.07em] text-[#574d40] uppercase min-[601px]:text-xs">
+          {label}
+        </span>
+        <Icon
+          className={`box-content size-4 shrink-0 rounded-[10px] p-1.5 min-[601px]:size-5 min-[601px]:p-2.25 ${STAT_ICON_TONES[tone]}`}
+        />
+      </div>
+      <strong className="mt-2.5 block text-[32px] leading-[1.2] font-bold min-[601px]:text-[44px]">
+        {value}
+      </strong>
+    </div>
+  );
+}
 
+function RoomTypeCard({ name, occupied, available, pending }) {
+  const totalRooms = occupied + available + pending;
+  const occupancyPercentage = (occupied / totalRooms) * 100;
 
+  return (
+    <article className="rounded-xl border border-[#e5e9ef] p-4.5">
+      <BedDouble size={26} className="text-[#bb904d]" />
+      <h3 className="mt-2.5 text-[17px] font-semibold">{name}</h3>
+      <p className="mt-1 text-xs text-[#7c8590]">{totalRooms} rooms total</p>
+
+      <div className="mt-4.5 mb-3 h-1.5 overflow-hidden rounded-lg bg-[#e3f3e9]">
+        <span className="block h-full bg-[#d7ac67]" style={{ width: `${occupancyPercentage}%` }} />
+      </div>
+
+      <footer className="flex justify-between gap-2 text-[11px] text-[#706148]">
+        <span>{occupied} occupied</span>
+        <span>{available} available</span>
+      </footer>
+    </article>
+  );
+}
+
+function DashboardOverview() {
+  return (
+    <>
+      <SectionHeading title="Property overview" />
+
+      <div className="grid grid-cols-2 gap-4.5 min-[901px]:grid-cols-3 min-[1201px]:grid-cols-5">
+        {STATS_DATA.map((stat) => (
+          <StatCard key={stat.label} {...stat} />
+        ))}
+      </div>
+
+      <section className="rounded-[15px] bg-white p-5">
+        <SectionHeading title="Room availability" note="By room type" />
+
+        <div className="mt-4.5 grid grid-cols-1 gap-4 min-[601px]:grid-cols-2 min-[1201px]:grid-cols-4">
+          {ROOM_TYPES.map((room) => (
+            <RoomTypeCard key={room.name} {...room} />
+          ))}
+        </div>
+      </section>
+
+      <ReservationsAndStatus />
+    </>
+  );
+}
+
+function SupportPlaceholder() {
+  return (
+    <section className="rounded-[15px] bg-white p-5">
+      <h2 className="text-lg font-semibold">Customer Support</h2>
+      <p className="mt-3 text-sm text-slate-500">No support conversations are connected yet.</p>
+    </section>
+  );
+}
+
+export default function AdminPage({ role = "admin" }) {
+  const { pathname } = useLocation();
+  const isStaff = role === "staff";
+  const basePath = isStaff ? "/staff" : "/admin";
+
+  const page = getPage(pathname, basePath, isStaff);
+  const header = getHeader(page, isStaff);
+
+  return (
+    <main className="flex min-h-screen flex-col">
+      <PageHeader title={header.title} desc={header.desc} />
+
+      <section className="flex">
+        <AdminSideBar />
+
+        <div className="flex w-full min-w-0 flex-col gap-4.5 bg-[#eef1ff] p-4 text-[#15212b] min-[901px]:p-6">
+          {page === "dashboard" && <DashboardOverview />}
+          {page === "users" && <UserManagement />}
+          {page === "rooms" && <RoomManagement key={role} readOnly={isStaff} />}
+          {page === "reservations" && <ReservationManagement key={role} readOnly={isStaff} />}
+          {page === "support" && <SupportPlaceholder />}
+        </div>
+      </section>
+    </main>
+  );
+}
