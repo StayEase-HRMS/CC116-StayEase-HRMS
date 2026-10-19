@@ -6,6 +6,10 @@ import { ReservationsAndStatus } from "./components/components";
 import UserManagement from "./UserManagement";
 import RoomManagement from "./RoomManagement";
 import ReservationManagement from "./ReservationManagement";
+import ReviewsManagement from "./ReviewsManagement";
+import Reports from "./Reports";
+import StaffReservations from "../staff/StaffReservations";
+import CustomerSupport from "../staff/CustomerSupport";
 // Still needed by UserManagement / RoomManagement / ReservationManagement until they're migrated to Tailwind.
 import "./admin.css";
 
@@ -37,6 +41,8 @@ const ROOM_TYPES = [
 const getPage = (pathname, basePath, isStaff) => {
   if (pathname === `${basePath}/rooms`) return "rooms";
   if (pathname === `${basePath}/reservations`) return "reservations";
+  if (!isStaff && pathname === `${basePath}/reviews`) return "reviews";
+  if (!isStaff && pathname === `${basePath}/reports`) return "reports";
   if (!isStaff && pathname === `${basePath}/users`) return "users";
   if (isStaff && pathname === `${basePath}/support`) return "support";
   return "dashboard";
@@ -44,6 +50,8 @@ const getPage = (pathname, basePath, isStaff) => {
 
 const getHeader = (page, isStaff) =>
   ({
+    reviews: { title: "Reviews & Ratings", desc: "Monitor guest feedback and respond to keep service quality high." },
+    reports: { title: "Reports", desc: "Review performance insights on bookings, occupancy, and revenue." },
     users: {
       title: "User Management",
       desc: "Manage guest and staff accounts, roles, and access across properties.",
@@ -57,12 +65,12 @@ const getHeader = (page, isStaff) =>
     reservations: {
       title: "Reservations",
       desc: isStaff
-        ? "View guest bookings and their status."
+        ? "Handle check-ins, check-outs, and upcoming guest bookings."
         : "Track and manage all guest bookings and their status.",
     },
     support: {
       title: "Customer Support",
-      desc: "Customer support workspace.",
+      desc: "Respond to guest inquiries and resolve concerns promptly.",
     },
     dashboard: {
       title: "Dashboard",
@@ -147,15 +155,6 @@ function DashboardOverview() {
   );
 }
 
-function SupportPlaceholder() {
-  return (
-    <section className="rounded-[15px] bg-white p-5">
-      <h2 className="text-lg font-semibold">Customer Support</h2>
-      <p className="mt-3 text-sm text-slate-500">No support conversations are connected yet.</p>
-    </section>
-  );
-}
-
 export default function AdminPage({ role = "admin" }) {
   const { pathname } = useLocation();
   const isStaff = role === "staff";
@@ -175,8 +174,10 @@ export default function AdminPage({ role = "admin" }) {
           {page === "dashboard" && <DashboardOverview />}
           {page === "users" && <UserManagement />}
           {page === "rooms" && <RoomManagement key={role} readOnly={isStaff} />}
-          {page === "reservations" && <ReservationManagement key={role} readOnly={isStaff} />}
-          {page === "support" && <SupportPlaceholder />}
+          {page === "reservations" && (isStaff ? <StaffReservations /> : <ReservationManagement />)}
+          {page === "reviews" && <ReviewsManagement />}
+          {page === "reports" && <Reports />}
+          {page === "support" && <CustomerSupport />}
         </div>
       </section>
     </main>

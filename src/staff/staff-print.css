@@ -1,0 +1,8 @@
+@media print {
+  body:has(.staff-receipt) { visibility: hidden; }
+  body:has(.staff-receipt) .management-dialog { position: absolute; inset: 0; width: 100%; max-height: none; overflow: visible; border: 0; box-shadow: none; }
+  body:has(.staff-receipt) .management-dialog::backdrop { background: white; }
+  .staff-receipt { visibility: visible; color: black; }
+  body:has(.staff-receipt) .management-dialog > header,
+  body:has(.staff-receipt) .management-dialog > footer { display: none; }
+}
