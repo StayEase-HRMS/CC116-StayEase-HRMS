@@ -21,6 +21,8 @@ function App() {
         <Route path="/admin/users" element={<AdminPage />} />
         <Route path="/admin/rooms" element={<AdminPage />} />
         <Route path="/admin/reservations" element={<AdminPage />} />
+        <Route path="/admin/account" element={<AdminPage />} />
+        <Route path="/staff/account" element={<AdminPage role="staff" />} />
         <Route path="/staff" element={<AdminPage role="staff" />} />
         <Route path="/staff/rooms" element={<AdminPage role="staff" />} />
         <Route path="/staff/reservations" element={<AdminPage role="staff" />} />

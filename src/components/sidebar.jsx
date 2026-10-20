@@ -1,5 +1,5 @@
-import { Star, BedDouble, CalendarDays, ChartColumn, LayoutDashboard, Users } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { Star, BedDouble, CalendarDays, ChartColumn, LayoutDashboard, Users, LogOut } from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
 
 const ADMIN_LINKS = [
 	{ icon: LayoutDashboard, label: "Dashboard", link: "/admin" },
@@ -23,11 +23,69 @@ const CUSTOMER_LINKS = [
 	{ icon: Users, label: "Customer Support", link: "/chat-support" },
 ];
 
-function SideBarShell({ children, management }) {
+// NEW: account block pinned to the bottom of the admin / staff sidebar.
+// Clicking the name opens the account page; the logout icon is a separate button.
+function AccountFooter({ accountLink, roleLabel, user, onLogout }) {
+	const navigate = useNavigate();
+	const initials = user.name
+		.split(" ")
+		.map((n) => n[0])
+		.join("")
+		.slice(0, 2)
+		.toUpperCase();
+
+	const handleLogout = () => {
+		if (onLogout) onLogout();
+		else navigate("/"); // replace with your real logout (clear session/token) when ready
+	};
+
+	return (
+		<div className="mt-auto flex items-center gap-1 border-t-2 border-gray-200 p-2">
+			<NavLink
+				end
+				to={accountLink}
+				title="My account"
+				aria-label="My account"
+				className={({ isActive }) =>
+					`flex min-w-0 flex-1 items-center gap-3 rounded-lg p-2 transition-colors focus-visible:outline-2 focus-visible:outline-[#4b6b95] ${
+						isActive ? "bg-[#f5e6cb]" : "hover:bg-[#e3effe]"
+					}`
+				}
+			>
+				{user.avatar ? (
+					<img src={user.avatar} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+				) : (
+					<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#b3832c] text-xs font-bold text-white">
+						{initials}
+					</span>
+				)}
+				{/* management-nav-label so it collapses together with the other labels */}
+				<span className="management-nav-label min-w-0">
+					<span className="block truncate text-xs font-semibold text-[#574d40]">{user.name}</span>
+					<span className="block truncate text-[11px] text-gray-500">{roleLabel}</span>
+				</span>
+			</NavLink>
+
+			<button
+				type="button"
+				onClick={handleLogout}
+				aria-label="Log out"
+				title="Log out"
+				className="shrink-0 cursor-pointer rounded-lg p-2 text-[#574d40] transition-colors hover:bg-[#e3effe] focus-visible:outline-2 focus-visible:outline-[#4b6b95]"
+			>
+				<LogOut size={18} />
+			</button>
+		</div>
+	);
+}
+
+function SideBarShell({ children, management, footer }) {
 	return (
 		<aside className="management-sidebar w-[200px] shrink-0 border-r-2 border-gray-200 bg-white text-left text-sm">
-			<div className={`sticky top-0 ${management ? '' : 'h-screen'}`}>
+			{/* management sidebars are now full viewport height so the footer sits at the bottom */}
+			<div className={`sticky top-0 h-screen ${management ? "flex flex-col" : ""}`}>
 				<ul className="grid">{children}</ul>
+				{footer}
 			</div>
 		</aside>
 	);
@@ -47,9 +105,9 @@ function NavItem({ icon: Icon, label, link, management, ...iconProps }) {
 	);
 }
 
-function SideBar({ links, management = false }) {
+function SideBar({ links, management = false, footer }) {
 	return (
-		<SideBarShell management={management}>
+		<SideBarShell management={management} footer={footer}>
 			{links.map((item) => (
 				<NavItem key={item.label} {...item} management={management} />
 			))}
@@ -57,6 +115,23 @@ function SideBar({ links, management = false }) {
 	);
 }
 
-export const AdminSideBar = () => <SideBar links={ADMIN_LINKS} management />;
-export const StaffSideBar = () => <SideBar links={STAFF_LINKS} management />;
+// Pass a real user (from your auth state) via the `user` prop; this is a placeholder default.
+const DEFAULT_USER = { name: "Joshybels", avatar: null };
+
+export const AdminSideBar = ({ user = DEFAULT_USER, onLogout }) => (
+	<SideBar
+		links={ADMIN_LINKS}
+		management
+		footer={<AccountFooter accountLink="/admin/account" roleLabel="StayEase Admin" user={user} onLogout={onLogout} />}
+	/>
+);
+
+export const StaffSideBar = ({ user = DEFAULT_USER, onLogout }) => (
+	<SideBar
+		links={STAFF_LINKS}
+		management
+		footer={<AccountFooter accountLink="/staff/account" roleLabel="StayEase Staff" user={user} onLogout={onLogout} />}
+	/>
+);
+
 export const CustomerSideBar = () => <SideBar links={CUSTOMER_LINKS} />;
