@@ -40,7 +40,7 @@ export default function UserManagement() {
     return null;
   }
   return <>
-    <div className="admin-toolbar"><span>Demo accounts · changes reset on refresh</span><button className="admin-primary" onClick={() => { setMode('add'); setSelected('add'); }}><Plus size={19} />Add Staff</button></div>
+    <div className="admin-toolbar"><button className="admin-primary" onClick={() => { setMode('add'); setSelected('add'); }}><Plus size={19} />Add Staff</button></div>
     <div className="admin-stats">{[
       ['Total accounts', accounts.length, Users], ['Guest accounts', accounts.filter(a => a.role === 'Guest').length, Briefcase], ['Staff accounts', accounts.filter(a => a.role === 'Staff').length, BadgeCheck], ['Suspended', accounts.filter(a => a.status === 'Suspended').length, Ban],
     ].map(([label, value, Icon]) => <div className="admin-stat" key={label}><div><span>{label}</span><Icon size={20} /></div><strong>{value}</strong></div>)}</div>
