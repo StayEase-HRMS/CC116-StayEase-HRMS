@@ -1,5 +1,4 @@
 import Pagination from './components/Pagination';
-import useRoomPageSize from './useRoomPageSize';
 import { useEffect, useRef, useState } from 'react';
 import { Plus, Search, RotateCcw, X, ImagePlus, ChevronRight, BedDouble, Check } from 'lucide-react';
 import roomPhoto from '../assets/room_1.jpg';
@@ -121,7 +120,7 @@ function StatusForm({ room, onSave, onClose }) {
 export default function RoomManagement({ readOnly = false }) {
   const [rooms, setRooms] = useState(initialRooms);
   const [page, setPage] = useState(1);
-  const pageSize = useRoomPageSize();
+  const pageSize = 9;
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('All');
   const [category, setCategory] = useState('All Categories');

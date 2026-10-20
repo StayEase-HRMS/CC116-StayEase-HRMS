@@ -1,0 +1,77 @@
+.management-content { padding:7px; gap:7px; }
+.management-content .admin-pagination { padding:8px 12px; margin-top:auto; flex-shrink:0; }
+.management-content .admin-pagination nav { flex-wrap:wrap; }
+.management-content .admin-table-scroll,
+.management-content .booking-table-scroll { height:auto; min-height:0; flex:1; }
+.management-content .admin-accounts,
+.management-content .booking-table-panel,
+.management-content .staff-booking-panel,
+.management-content .room-paged-section { flex:1; min-height:0; }
+.management-content .room-page-body { min-height:0; flex:1; }
+.management-content .room-inventory { gap:7px; }
+.management-content .staff-booking-panel > div { flex:none; }
+.management-content .support-layout { flex:1; }
+.management-content .support-inquiries { min-width:0; }
+.management-content .support-conversation [role="log"] { overflow-wrap:anywhere; }
+
+/* Compact desktop layout derives its remaining space from the actual header.
+   On short or narrow windows the document grows naturally, never clips content. */
+@media (min-width:1100px) and (min-height:700px) {
+  .management-shell { height:100dvh; }
+  .management-shell > header { flex-shrink:0; }
+  .management-shell > section { min-height:0; }
+  .management-content { min-height:0; }
+  .management-content > * { flex-shrink:0; }
+  .management-content .admin-toolbar { min-height:30px; }
+  .management-content .admin-primary { padding:6px 12px; }
+  .management-content .admin-filters,
+  .management-content .room-filters { padding:7px; gap:7px; }
+  .management-content .admin-search,
+  .management-content .admin-filters select,
+  .management-content .room-filters select { padding:7px; }
+  .management-content .admin-stat { padding:9px 14px; }
+  .management-content .admin-stat strong { font-size:28px; margin-top:0; }
+  .management-content .admin-stats { gap:7px; }
+  .management-content .admin-user-table td,
+  .management-content .booking-table-panel td { padding:7px 12px; }
+  .management-content .admin-user-table th,
+  .management-content .booking-table-panel th { padding:8px 12px; }
+  .management-content .staff-booking-panel td { padding:6px 10px; white-space:nowrap; }
+  .management-content .staff-booking-panel th { padding:8px 10px; }
+  .management-content .room-inventory { grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(0,1fr)); height:100%; }
+  .management-content .room-inventory-card { min-height:0; padding:7px 10px; }
+  .management-content .room-card-summary { padding-top:24px; gap:8px; }
+  .management-content .room-card-summary > img,
+  .management-content .room-no-photo { width:52px; height:52px; }
+  .management-content .room-card-summary h2 { font-size:15px; }
+  .management-content .room-card-summary p { margin:0; font-size:12px; }
+  .management-content .room-card-summary strong { font-size:14px; }
+  .management-content .room-card-summary > div:not(.room-no-photo) { padding-right:0; min-width:0; }
+  .management-content .room-inventory-card footer { padding-top:3px; }
+  .management-content .room-page-body { min-height:435px; }
+  .management-content .room-filters .admin-search { flex-basis:auto; }
+  .page-dashboard > .grid { grid-template-columns:repeat(5,minmax(0,1fr)); gap:7px; }
+  .page-dashboard > .grid > div { padding:9px 14px; }
+  .page-dashboard > .grid strong { font-size:28px; margin-top:0; }
+  .page-dashboard > section { padding:9px; }
+  .page-dashboard > section > .grid { grid-template-columns:repeat(4,minmax(0,1fr)); margin-top:7px; gap:7px; }
+  .page-dashboard article { padding:7px; }
+  .page-dashboard article > svg { display:none; }
+  .page-dashboard article h3 { margin-top:0; }
+  .page-dashboard article > div { margin:7px 0; }
+  .page-dashboard td { padding-top:4px; padding-bottom:4px; }
+  .page-dashboard .admin-pagination { font-size:12px; padding:6px; }
+  .page-reviews > .grid { gap:7px; }
+  .page-reviews article { padding:7px 12px; gap:12px; }
+  .page-reviews article p { font-size:13px; }
+  .page-reviews article button { padding-top:4px; padding-bottom:4px; }
+  .page-reports > section { margin-top:0; padding:10px; }
+  .page-reports > .grid { gap:7px; grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .page-reports > .grid article { padding:10px; }
+  .page-reports svg[role="img"] { height:clamp(180px,32vh,340px); }
+  .page-reports > p:last-child { padding-top:7px; }
+  .support-layout { grid-template-columns:minmax(280px,0.85fr) minmax(0,1.2fr); }
+  .support-inquiries > div > button { padding:12px; }
+  .support-conversation > header { padding:12px; }
+  .support-conversation > [role="log"] { padding:12px; }
+}

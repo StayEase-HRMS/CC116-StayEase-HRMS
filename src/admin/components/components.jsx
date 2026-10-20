@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import Pagination from './Pagination';
 const reservations = [
   { guest: "Dayapera", room: "405 Deluxe", checkIn: "Sept 22, 2026", checkOut: "Sept 25, 2026", status: "Checked-in" },
   { guest: "Puerta", room: "205 Standard", checkIn: "Sept 22, 2026", checkOut: "Sept 25, 2026", status: "Pending" },
@@ -27,6 +29,7 @@ function StatusBadge({ status }) {
 }
 
 function ReservationsTable() {
+  const [page, setPage] = useState(1);
   return (
     <div className="flex-1 min-w-0 p-4 rounded-xl bg-white shadow-sm">
       <div className="flex items-center justify-between px-2">
@@ -46,7 +49,7 @@ function ReservationsTable() {
             </tr>
           </thead>
           <tbody>
-            {reservations.map((r) => (
+            {reservations.slice((page - 1) * 7, page * 7).map((r) => (
               <tr key={r.guest}>
                 <td className="py-3">{r.guest}</td>
                 <td className="py-3">{r.room}</td>
@@ -58,6 +61,7 @@ function ReservationsTable() {
           </tbody>
         </table>
       </div>
+      <Pagination page={page} total={reservations.length} pageSize={7} onChange={setPage} noun="reservations" />
     </div>
   )
 }

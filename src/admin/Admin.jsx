@@ -12,6 +12,7 @@ import StaffReservations from "../staff/StaffReservations";
 import CustomerSupport from "../staff/CustomerSupport";
 // Still needed by UserManagement / RoomManagement / ReservationManagement until they're migrated to Tailwind.
 import "./admin.css";
+import "./layout.css";
 
 /* ---------- data ---------- */
 
@@ -170,7 +171,7 @@ export default function AdminPage({ role = "admin" }) {
       <section className="flex flex-1">
         {isStaff ? <StaffSideBar /> : <AdminSideBar />}
 
-        <div className="flex w-full min-w-0 flex-col gap-4.5 bg-[#eef1ff] p-4 text-[#15212b] min-[901px]:p-6">
+        <div className={`management-content page-${page} flex w-full min-w-0 flex-col bg-[#eef1ff] text-[#15212b]`}>
           {page === "dashboard" && <DashboardOverview />}
           {page === "users" && <UserManagement />}
           {page === "rooms" && <RoomManagement key={role} readOnly={isStaff} />}
