@@ -133,7 +133,6 @@ function RoomTypeCard({ name, occupied, available, pending }) {
 function DashboardOverview() {
   return (
     <>
-      <SectionHeading title="Property overview" />
 
       <div className="grid grid-cols-2 gap-4.5 min-[901px]:grid-cols-3 min-[1201px]:grid-cols-5">
         {STATS_DATA.map((stat) => (
