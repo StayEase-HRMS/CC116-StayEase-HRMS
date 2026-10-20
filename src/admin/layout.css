@@ -86,7 +86,7 @@
 
 
 
-  .page-reviews > .grid { align-content:start; grid-auto-rows:minmax(96px,auto); }
+  .page-reviews > .grid { align-content:start; grid-auto-rows:minmax(96px,auto); min-height:714px; }
   .page-reviews article { align-content:center; }
   .management-content .support-layout { min-height:0; }
   .management-content .support-conversation { height:auto; }
