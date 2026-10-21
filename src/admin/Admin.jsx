@@ -10,6 +10,7 @@ import ReviewsManagement from "./ReviewsManagement";
 import Reports from "./Reports";
 import StaffReservations from "../staff/StaffReservations";
 import CustomerSupport from "../staff/CustomerSupport";
+import AccountManagement from "./AccountManagement";
 // Still needed by UserManagement / RoomManagement / ReservationManagement until they're migrated to Tailwind.
 import "./admin.css";
 
@@ -45,6 +46,7 @@ const getPage = (pathname, basePath, isStaff) => {
   if (!isStaff && pathname === `${basePath}/reports`) return "reports";
   if (!isStaff && pathname === `${basePath}/users`) return "users";
   if (isStaff && pathname === `${basePath}/support`) return "support";
+  if (pathname === `${basePath}/account`) return "account";
   return "dashboard";
 };
 
@@ -55,6 +57,10 @@ const getHeader = (page, isStaff) =>
     users: {
       title: "User Management",
       desc: "Manage guest and staff accounts, roles, and access across properties.",
+    },
+    account: {
+      title: "Account management",
+      desc: "Manage operational profile, floor access, security credentials, and alert preferences.",
     },
     rooms: {
       title: "Room Management",
@@ -173,6 +179,7 @@ export default function AdminPage({ role = "admin" }) {
         <div className="flex w-full min-w-0 flex-col gap-4.5 bg-[#eef1ff] p-4 text-[#15212b] min-[901px]:p-6">
           {page === "dashboard" && <DashboardOverview />}
           {page === "users" && <UserManagement />}
+          {page === "account" && <AccountManagement role={role} />}
           {page === "rooms" && <RoomManagement key={role} readOnly={isStaff} />}
           {page === "reservations" && (isStaff ? <StaffReservations /> : <ReservationManagement />)}
           {page === "reviews" && <ReviewsManagement />}
