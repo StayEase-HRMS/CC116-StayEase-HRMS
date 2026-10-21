@@ -1,59 +1,27 @@
 import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
+import { createSupportTicket, listSupportTickets } from "../api/support";
 
 // Placeholder data — replace with API/state later.
 const AGENT = { name: "John Doe", role: "Customer service assistant" };
 
-const INITIAL_MESSAGES = [
-  {
-    id: 1,
-    from: "agent",
-    text: "Hi! Welcome to StayEase support. How can I help you today?",
-    time: "2:41 am",
-  },
-  {
-    id: 2,
-    from: "customer",
-    text: "Hello! I have a reservation for this Friday. Can I check in earlier than 2 PM?",
-    time: "2:43 am",
-  },
-  {
-    id: 3,
-    from: "agent",
-    text: "Of course! Let me check your booking. Could you share your reservation number?",
-    time: "2:44 am",
-  },
-  {
-    id: 4,
-    from: "customer",
-    text: "Sure, it's SE-20481. I booked a Deluxe room for two nights.",
-    time: "2:46 am",
-  },
-  {
-    id: 5,
-    from: "agent",
-    text: "Thanks! Your Deluxe room is expected to be ready by 11 AM on Friday, so early check-in is possible at no extra charge.",
-    time: "2:49 am",
-  },
-  {
-    id: 6,
-    from: "customer",
-    text: "That's great. Is contactless check-in available too?",
-    time: "2:51 am",
-  },
-  {
-    id: 7,
-    from: "agent",
-    text: "Yes! You'll receive a digital key and check-in link by email 24 hours before arrival. Is there anything else I can help with?",
-    time: "2:55 am",
-  },
-  {
-    id: 8,
-    from: "customer",
-    text: "That's all, thank you so much!",
-    time: "2:56 am",
-  },
-];
+const GREETING = {
+  id: "greeting",
+  from: "agent",
+  text: "Hi! Welcome to StayEase support. How can we help you today?",
+  time: "",
+};
+
+const formatTime = (value) =>
+  new Date(value).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+// A support ticket is saved as one message from the customer.
+const ticketToMessage = (ticket) => ({
+  id: ticket.id,
+  from: "customer",
+  text: ticket.message,
+  time: formatTime(ticket.created_at),
+});
 
 function Avatar({ className = "" }) {
   return <div className={`shrink-0 rounded-full bg-orange-200 ${className}`} />;
@@ -79,9 +47,17 @@ function MessageBubble({ message }) {
       <Avatar className="h-12 w-12" />
       <div className={`flex flex-col gap-1 ${isCustomer ? "items-end" : "items-start"}`}>
         <p className="max-w-120 rounded-xl bg-white p-3 wrap-break-word">{message.text}</p>
-        <p className="text-sm text-gray-500">
-          {isCustomer ? "Sent" : "Read"} {message.time}
-        </p>
+        {(message.time || message.pending || message.failed) && (
+          <p className={`text-sm ${message.failed ? "text-red-600" : "text-gray-500"}`}>
+            {message.failed
+              ? "Couldn't send. Please try again."
+              : message.pending
+                ? "Sending…"
+                : isCustomer
+                  ? `Sent ${message.time}`
+                  : message.time}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -116,29 +92,56 @@ function MessageInput({ value, onChange, onSubmit }) {
 }
 
 export default function CustomerChatSupport() {
-  const [messages, setMessages] = useState(INITIAL_MESSAGES);
+  const [messages, setMessages] = useState([GREETING]);
   const [draft, setDraft] = useState("");
   const bottomRef = useRef(null);
+
+  // Load the customer's earlier messages (empty when logged out or offline).
+  useEffect(() => {
+    let ignore = false;
+
+    listSupportTickets()
+      .then((tickets) => {
+        if (ignore) return;
+        const history = tickets.map(ticketToMessage);
+        const loaded = new Set(history.map((m) => m.id));
+        setMessages((prev) => [
+          GREETING,
+          ...history,
+          // keep anything sent while the history was loading
+          ...prev.filter((m) => m.from === "customer" && !loaded.has(m.id)),
+        ]);
+      })
+      .catch((err) => console.warn("[CustomerChatSupport] Could not load messages:", err));
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const text = draft.trim();
     if (!text) return;
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        from: "customer",
-        text,
-        time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
-      },
-    ]);
+    // Show the message right away, then swap in the saved ticket.
+    const tempId = `temp-${Date.now()}`;
+    setMessages((prev) => [...prev, { id: tempId, from: "customer", text, pending: true }]);
     setDraft("");
+
+    try {
+      const ticket = await createSupportTicket({ message: text });
+      setMessages((prev) => prev.map((m) => (m.id === tempId ? ticketToMessage(ticket) : m)));
+    } catch (err) {
+      console.warn("[CustomerChatSupport] Could not send message:", err);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? { ...m, pending: false, failed: true } : m))
+      );
+    }
   }
 
   return (

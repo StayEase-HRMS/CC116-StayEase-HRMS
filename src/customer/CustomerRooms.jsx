@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, RotateCcw, Search } from "lucide-react";
 import RoomCard from "../components/RoomCard";
 import RoomHero from "../components/RoomHero";
-import { rooms } from "./mock-data-rooms";
+import { useRooms } from "../api/rooms";
+import { createReservation } from "../api/reservations";
+import BookingModal from "./BookingModal";
 
 const PAGE_SIZE = 6;
 
@@ -10,6 +13,7 @@ const STATUS_OPTIONS = [
   { value: "all", label: "All" },
   { value: "available", label: "Available" },
   { value: "reserved", label: "Reserved" },
+  { value: "occupied", label: "Occupied" },
   { value: "maintenance", label: "Maintenance" },
 ];
 
@@ -123,8 +127,12 @@ function Pagination({ page, totalPages, onChange }) {
 /* ---------- page ---------- */
 
 export default function CustomerRooms() {
+  const navigate = useNavigate();
+  const { rooms, loading, error, isLive } = useRooms();
+
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [page, setPage] = useState(1);
+  const [selectedRoom, setSelectedRoom] = useState(null);
 
   // Any filter change sends the list back to page 1.
   const updateFilter = (key, value) => {
@@ -150,29 +158,50 @@ export default function CustomerRooms() {
   const currentPage = Math.min(page, totalPages);
   const pageRooms = filteredRooms.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  const featuredRooms = rooms.filter((room) => room.featured);
+  // Cap the hero so a big catalog doesn't produce dozens of slides.
+  const featuredRooms = rooms.filter((room) => room.featured).slice(0, 5);
 
   return (
     <section className="bg-linear-to-b from-[#e8eefb] to-[#f6f8fd] p-4">
       <div className="mx-auto max-w-6xl">
-        <RoomHero rooms={featuredRooms} />
+        {(error || !isLive) && (
+          <p className="mb-4 rounded-lg bg-amber-100 px-4 py-2 text-sm text-amber-800">
+            {error
+              ? "Couldn't load live rooms, so sample rooms are shown."
+              : "Demo mode: Supabase isn't configured, so sample rooms are shown."}
+          </p>
+        )}
+
+        <RoomHero rooms={featuredRooms} onView={setSelectedRoom} />
 
         <RoomFilters filters={filters} onChange={updateFilter} onReset={resetFilters} />
 
-        {pageRooms.length === 0 ? (
+        {loading ? (
+          <p className="py-10 text-center text-gray-500">Loading rooms…</p>
+        ) : pageRooms.length === 0 ? (
           <p className="py-10 text-center text-gray-500">No rooms match your filters.</p>
         ) : (
           <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {pageRooms.map((room) => (
-              <RoomCard key={room.id} room={room} />
+              <RoomCard key={room.id} room={room} onView={setSelectedRoom} />
             ))}
           </div>
         )}
 
-        {totalPages > 1 && (
+        {!loading && totalPages > 1 && (
           <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
         )}
       </div>
+
+      {selectedRoom && (
+        <BookingModal
+          mode="create"
+          room={selectedRoom}
+          onClose={() => setSelectedRoom(null)}
+          onSubmit={(values) => createReservation({ roomId: selectedRoom.id, ...values })}
+          onViewReservations={() => navigate("/my-reservation")}
+        />
+      )}
     </section>
   );
 }

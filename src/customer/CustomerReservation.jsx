@@ -1,9 +1,21 @@
 import { useState } from "react";
-import { CalendarX, Pen, Key } from "lucide-react";
-import { reservations, recommendedRooms } from "./mock-data-reservation";
+import { Link } from "react-router-dom";
+import { CalendarX, Pen, Key, XCircle } from "lucide-react";
+import { useMyReservations } from "../api/useMyReservations";
+import { useRooms } from "../api/rooms";
+import { formatPrice } from "../components/RoomCard";
+import BookingModal from "./BookingModal";
 import room_1 from "../assets/room_1.jpg";
 
+/* ---------- helpers ---------- */
+
 const toDate = (iso) => new Date(`${iso}T00:00:00`);
+
+const startOfToday = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
 
 const formatDate = (iso) =>
   toDate(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -13,17 +25,13 @@ const countNights = (checkIn, checkOut) =>
 
 // In-stay = today falls within the booking's check-in / check-out dates (inclusive).
 const isInStay = ({ checkInDate, checkOutDate }) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = startOfToday();
   return toDate(checkInDate) <= today && today <= toDate(checkOutDate);
 };
 
-const formatPrice = (amount) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(amount);
+// The server only lets guests modify / cancel confirmed bookings that haven't started.
+const canManage = (booking) =>
+  booking.status === "confirmed" && toDate(booking.checkInDate) >= startOfToday();
 
 const STATUS_STYLES = {
   confirmed: { label: "Confirmed", className: "bg-green-200 text-green-800" },
@@ -49,7 +57,7 @@ function Detail({ label, children }) {
 }
 
 // `tag` is an optional highlight label (e.g. "Current stay") shown before the status.
-function BookingCard({ booking, tag }) {
+function BookingCard({ booking, tag, onModify, onCancel }) {
   const {
     ref,
     status,
@@ -61,6 +69,7 @@ function BookingCard({ booking, tag }) {
     checkOutTime,
     roomNumber,
     guests,
+    image,
   } = booking;
 
   const nights = countNights(checkInDate, checkOutDate);
@@ -85,7 +94,7 @@ function BookingCard({ booking, tag }) {
 
         <div
           className="relative mt-3 flex h-48 w-full items-end justify-between overflow-hidden rounded-lg bg-cover bg-center p-4"
-          style={{ backgroundImage: `url(${room_1})` }}
+          style={{ backgroundImage: `url(${image || room_1})` }}
         >
           <div className="absolute inset-0 bg-black/50" />
 
@@ -124,7 +133,7 @@ function BookingCard({ booking, tag }) {
       </section>
 
       {status === "confirmed" && (
-        <div className="mt-3 flex gap-3">
+        <div className="mt-3 flex flex-wrap gap-3">
           <button
             type="button"
             className="flex cursor-pointer items-center gap-2 rounded-xl bg-amber-300 px-3 py-1 text-amber-800 shadow-sm hover:bg-amber-200"
@@ -132,13 +141,27 @@ function BookingCard({ booking, tag }) {
             <Key size={15} strokeWidth={3} />
             Access digital key
           </button>
-          <button
-            type="button"
-            className="flex cursor-pointer items-center gap-2 rounded-xl bg-blue-300 px-3 py-1 hover:bg-blue-200"
-          >
-            <Pen size={15} strokeWidth={3} />
-            Modify stay
-          </button>
+
+          {canManage(booking) && (
+            <>
+              <button
+                type="button"
+                onClick={() => onModify(booking)}
+                className="flex cursor-pointer items-center gap-2 rounded-xl bg-blue-300 px-3 py-1 hover:bg-blue-200"
+              >
+                <Pen size={15} strokeWidth={3} />
+                Modify stay
+              </button>
+              <button
+                type="button"
+                onClick={() => onCancel(booking)}
+                className="flex cursor-pointer items-center gap-2 rounded-xl bg-red-100 px-3 py-1 text-red-700 hover:bg-red-200"
+              >
+                <XCircle size={15} strokeWidth={3} />
+                Cancel stay
+              </button>
+            </>
+          )}
         </div>
       )}
     </article>
@@ -188,12 +211,15 @@ function EmptyReservations() {
 function RecommendedRoomCard({ room }) {
   return (
     <article className="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm">
-      {/* Placeholder — swap for <img src={...} alt={room.name} className="h-40 w-full object-cover" /> */}
-      <div className="h-40 w-full bg-gray-300" />
+      {room.image ? (
+        <img src={room.image} alt={room.name} className="h-40 w-full object-cover" />
+      ) : (
+        <div className="h-40 w-full bg-gray-300" />
+      )}
 
       <div className="flex flex-1 flex-col p-4">
         <p className="text-lg font-bold">{room.name}</p>
-        <p className="text-sm text-gray-500">{room.view}</p>
+        <p className="text-sm text-gray-500">{room.subtitle}</p>
         <p className="mt-2 text-sm text-gray-600">{room.description}</p>
 
         <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-3">
@@ -201,23 +227,30 @@ function RecommendedRoomCard({ room }) {
             {formatPrice(room.pricePerNight)}{" "}
             <span className="text-xs font-normal text-gray-400">/ night</span>
           </p>
-          <button
-            type="button"
-            className="cursor-pointer rounded-xl bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-500" >
+          <Link
+            to="/rooms"
+            className="rounded-xl bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-500"
+          >
             View room
-          </button>
+          </Link>
         </div>
       </div>
     </article>
   );
 }
 
-function RecommendedRooms({ rooms }) {
+// Fetches the room catalog itself, so the request only happens when it's actually shown.
+function RecommendedRooms() {
+  const { rooms, loading } = useRooms();
+  const picks = rooms.filter((room) => room.status === "available").slice(0, 4);
+
+  if (loading || picks.length === 0) return null;
+
   return (
     <div className="mt-6">
       <h2 className="mb-3 text-xl font-bold">Recommended rooms</h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {rooms.map((room) => (
+        {picks.map((room) => (
           <RecommendedRoomCard key={room.id} room={room} />
         ))}
       </div>
@@ -228,7 +261,11 @@ function RecommendedRooms({ rooms }) {
 /* ---------- page ---------- */
 
 export default function CustomerReservations() {
+  const { reservations, loading, error, isDemo, update, cancel } = useMyReservations();
+
   const [activeTab, setActiveTab] = useState("upcoming");
+  const [editing, setEditing] = useState(null);
+  const [actionError, setActionError] = useState(null);
 
   // The current stay is pinned at the top, so it's kept out of the tabbed list below.
   const currentStay = reservations.find((r) => r.status === "confirmed" && isInStay(r));
@@ -238,12 +275,50 @@ export default function CustomerReservations() {
   const activeStatus = TABS.find((tab) => tab.key === activeTab).status;
   const visibleReservations = byStatus(activeStatus);
 
+  // Demo rows have no `id`, so fall back to the reference code to target just one booking.
+  const idOf = (booking) => booking.id ?? booking.ref;
+
+  const handleCancel = async (booking) => {
+    if (!window.confirm(`Cancel your stay at ${booking.location} (${booking.ref})?`)) return;
+    setActionError(null);
+    try {
+      await cancel(idOf(booking));
+    } catch (err) {
+      setActionError(err.message || "Couldn't cancel this reservation. Please try again.");
+    }
+  };
+
+  const notices = (
+    <>
+      {isDemo && (
+        <p className="mb-4 rounded-lg bg-amber-100 px-4 py-2 text-sm text-amber-800">
+          Demo mode: Supabase isn't configured, so sample reservations are shown.
+        </p>
+      )}
+      {(error || actionError) && (
+        <p role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+          {actionError || error}
+        </p>
+      )}
+    </>
+  );
+
+  if (loading) {
+    return (
+      <section className="min-w-0 flex-1 bg-slate-100 p-4">
+        <p className="py-10 text-center text-gray-500">Loading your reservations…</p>
+      </section>
+    );
+  }
+
   return (
     <section className="min-w-0 flex-1 bg-slate-100 p-4">
+      {notices}
+
       {reservations.length === 0 ? (
         <>
           <EmptyReservations />
-          <RecommendedRooms rooms={recommendedRooms} />
+          <RecommendedRooms />
         </>
       ) : (
         <>
@@ -255,7 +330,12 @@ export default function CustomerReservations() {
 
           {currentStay && (
             <div className="mt-4">
-              <BookingCard booking={currentStay} tag="Current stay" />
+              <BookingCard
+                booking={currentStay}
+                tag="Current stay"
+                onModify={setEditing}
+                onCancel={handleCancel}
+              />
             </div>
           )}
 
@@ -268,11 +348,25 @@ export default function CustomerReservations() {
           ) : (
             <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-2">
               {visibleReservations.map((booking) => (
-                <BookingCard key={booking.ref} booking={booking} />
+                <BookingCard
+                  key={booking.ref}
+                  booking={booking}
+                  onModify={setEditing}
+                  onCancel={handleCancel}
+                />
               ))}
             </div>
           )}
         </>
+      )}
+
+      {editing && (
+        <BookingModal
+          mode="edit"
+          booking={editing}
+          onClose={() => setEditing(null)}
+          onSubmit={(values) => update(idOf(editing), values)}
+        />
       )}
     </section>
   );
