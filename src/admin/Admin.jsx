@@ -13,6 +13,7 @@ import CustomerSupport from "../staff/CustomerSupport";
 import AccountManagement from "./AccountManagement";
 // Still needed by UserManagement / RoomManagement / ReservationManagement until they're migrated to Tailwind.
 import "./admin.css";
+import "./layout.css";
 
 /* ---------- data ---------- */
 
@@ -138,7 +139,6 @@ function RoomTypeCard({ name, occupied, available, pending }) {
 function DashboardOverview() {
   return (
     <>
-      <SectionHeading title="Property overview" />
 
       <div className="grid grid-cols-2 gap-4.5 min-[901px]:grid-cols-3 min-[1201px]:grid-cols-5">
         {STATS_DATA.map((stat) => (
@@ -176,7 +176,7 @@ export default function AdminPage({ role = "admin" }) {
       <section className="flex flex-1">
         {isStaff ? <StaffSideBar /> : <AdminSideBar />}
 
-        <div className="flex w-full min-w-0 flex-col gap-4.5 bg-[#eef1ff] p-4 text-[#15212b] min-[901px]:p-6">
+        <div className={`management-content page-${page} flex w-full min-w-0 flex-col bg-[#eef1ff] text-[#15212b]`}>
           {page === "dashboard" && <DashboardOverview />}
           {page === "users" && <UserManagement />}
           {page === "account" && <AccountManagement role={role} />}

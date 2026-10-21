@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import Pagination from './Pagination';
 const reservations = [
   { guest: "Dayapera", room: "405 Deluxe", checkIn: "Sept 22, 2026", checkOut: "Sept 25, 2026", status: "Checked-in" },
   { guest: "Puerta", room: "205 Standard", checkIn: "Sept 22, 2026", checkOut: "Sept 25, 2026", status: "Pending" },
@@ -27,15 +29,16 @@ function StatusBadge({ status }) {
 }
 
 function ReservationsTable() {
+  const [page, setPage] = useState(1);
   return (
-    <div className="flex-1 min-w-0 p-4 rounded-xl bg-white shadow-sm">
+    <div className="dashboard-reservations min-w-0 rounded-xl bg-white">
       <div className="flex items-center justify-between px-2">
-        <h2 className="text-base font-bold">Today's Reservation</h2>
+        <h2 className="text-base font-bold">Today's Reservations</h2>
         <a href="#" className="text-xs text-blue-600 mr-6">View all</a>
       </div>
 
       <div className="mt-3 overflow-x-auto">
-        <table className="w-full min-w-[32rem] text-center text-xs">
+        <table className="management-table w-full min-w-[32rem]">
           <thead>
             <tr className="bg-blue-100 text-sm">
               <th className="py-3 font-normal">Guest Name</th>
@@ -46,7 +49,7 @@ function ReservationsTable() {
             </tr>
           </thead>
           <tbody>
-            {reservations.map((r) => (
+            {reservations.slice((page - 1) * 7, page * 7).map((r) => (
               <tr key={r.guest}>
                 <td className="py-3">{r.guest}</td>
                 <td className="py-3">{r.room}</td>
@@ -58,22 +61,24 @@ function ReservationsTable() {
           </tbody>
         </table>
       </div>
+      <Pagination page={page} total={reservations.length} pageSize={7} onChange={setPage} noun="reservations" />
     </div>
   )
 }
 
-function PieChart({ data, size = 180 }) {
+function PieChart({ data, size = 220 }) {
   const total = data.reduce((sum, d) => sum + d.value, 0)
   const r = size / 2
-  let angle = -Math.PI / 2 // start at 12 o'clock
+  // Calculate each slice from its preceding values without mutating render state.
 
-  const slices = data.map((d) => {
+  const slices = data.map((d, index) => {
+    const angle = -Math.PI / 2 + data.slice(0, index).reduce((sum, item) => sum + item.value, 0) / total * Math.PI * 2
     const sweep = (d.value / total) * Math.PI * 2
     const x1 = r + r * Math.cos(angle)
     const y1 = r + r * Math.sin(angle)
-    angle += sweep
-    const x2 = r + r * Math.cos(angle)
-    const y2 = r + r * Math.sin(angle)
+    const endAngle = angle + sweep
+    const x2 = r + r * Math.cos(endAngle)
+    const y2 = r + r * Math.sin(endAngle)
     const largeArc = sweep > Math.PI ? 1 : 0
     return {
       ...d,
@@ -94,7 +99,7 @@ function RoomStatusOverview() {
   const total = roomStatus.reduce((sum, d) => sum + d.value, 0)
 
   return (
-    <div className="flex-1 min-w-0 p-4 rounded-xl bg-white shadow-sm">
+    <div className="dashboard-room-status min-w-0 rounded-xl bg-white">
       <h2 className="text-base font-bold pb-2 border-b border-gray-200">Room Status Overview</h2>
 
       <div className="mt-4 flex items-center justify-around gap-6 flex-wrap">
@@ -121,7 +126,7 @@ function RoomStatusOverview() {
 
 export function ReservationsAndStatus() {
   return (
-    <div className="flex gap-3 flex-col lg:flex-row">
+    <div className="dashboard-details">
       <ReservationsTable />
       <RoomStatusOverview />
     </div>

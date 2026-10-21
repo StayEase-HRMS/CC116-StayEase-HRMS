@@ -1,5 +1,6 @@
+import SharedPagination from './components/Pagination';
 import { useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 export const control = 'rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm disabled:opacity-40';
 export const panel = 'rounded-2xl border border-slate-200 bg-white';
@@ -9,8 +10,7 @@ export function SearchField({ value, onChange, placeholder }) {
 }
 
 export function Pagination({ page, total, size, onChange, noun }) {
-  const pages = Math.max(1, Math.ceil(total / size));
-  return <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 p-4 text-sm text-slate-500"><span>Showing {total ? (page - 1) * size + 1 : 0}–{Math.min(page * size, total)} of {total} {noun}</span><div className="flex items-center gap-2"><button className={control} aria-label="Previous page" disabled={page === 1} onClick={() => onChange(page - 1)}><ChevronLeft size={16} /></button><span aria-current="page" className="rounded-md bg-[#d5a657] px-3 py-2 text-white">{page}</span><span>of {pages}</span><button className={control} aria-label="Next page" disabled={page === pages} onClick={() => onChange(page + 1)}><ChevronRight size={16} /></button></div></footer>;
+  return <SharedPagination page={page} total={total} pageSize={size} onChange={onChange} noun={noun} />;
 }
 
 export function StatusBadge({ status }) {

@@ -1,5 +1,4 @@
 import Pagination from './components/Pagination';
-import useRoomPageSize from './useRoomPageSize';
 import { useEffect, useRef, useState } from 'react';
 import { Plus, Search, RotateCcw, X, ImagePlus, ChevronRight, BedDouble, Check } from 'lucide-react';
 import roomPhoto from '../assets/room_1.jpg';
@@ -121,7 +120,7 @@ function StatusForm({ room, onSave, onClose }) {
 export default function RoomManagement({ readOnly = false }) {
   const [rooms, setRooms] = useState(initialRooms);
   const [page, setPage] = useState(1);
-  const pageSize = useRoomPageSize();
+  const pageSize = 9;
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('All');
   const [category, setCategory] = useState('All Categories');
@@ -143,7 +142,7 @@ export default function RoomManagement({ readOnly = false }) {
     close(); return null;
   }
   return <>
-    <div className="admin-toolbar"><span>Demo inventory · changes reset when you leave this page</span>{!readOnly && <button className="admin-primary" onClick={() => setModal({ mode: 'add' })}><Plus size={18} />Add Room</button>}</div>
+    {!readOnly && <div className="admin-toolbar"><button className="admin-primary" onClick={() => setModal({ mode: 'add' })}><Plus size={18} />Add Room</button></div>}
     <div className="room-filters"><label className="admin-search"><Search size={18} /><input aria-label="Search rooms" placeholder="Search room number or category..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} /></label><label>Status:<select value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}>{['All', ...Object.keys(statusDescriptions)].map(s => <option key={s}>{s}</option>)}</select></label><label>Category:<select value={category} onChange={e => { setCategory(e.target.value); setPage(1); }}>{['All Categories', ...categories].map(c => <option key={c}>{c}</option>)}</select></label><button className="admin-icon-button" aria-label="Reset room filters" onClick={() => { setSearch(''); setStatus('All'); setCategory('All Categories'); setPage(1); }}><RotateCcw size={18} /></button></div>
     {removed && <div className="room-undo" role="status"><span>{removed.name} removed.</span><button onClick={() => { setRooms([...rooms, removed]); setRemoved(null); }}>Undo</button></div>}
     <section className="room-paged-section" aria-label="Room inventory"><div className="room-page-body"><div className="room-inventory">{visible.map(room => <article className="room-inventory-card" key={room.id}><div className="room-card-summary">{room.photos[0] ? <img src={room.photos[0]} alt={room.name} /> : <div className="room-no-photo"><BedDouble size={30} /></div>}<div><h2>{room.name}</h2><p>{room.category}</p><strong>{currency(room.price)}</strong><small> / night</small></div><StatusBadge status={room.status} /></div><footer><button aria-label={'View ' + room.name} onClick={() => setModal({ mode: 'view', id: room.id })}>View <ChevronRight size={14} /></button></footer></article>)}</div>
@@ -152,7 +151,7 @@ export default function RoomManagement({ readOnly = false }) {
     {!readOnly && (modal?.mode === 'add' || (modal?.mode === 'edit' && selected)) && <RoomForm key={modal.mode + (selected?.id ?? '')} room={selected} onSave={save} onClose={close} />}
     {modal?.mode === 'view' && selected && <RoomView readOnly={readOnly} room={selected} onClose={close} onEdit={() => setModal({ mode: 'edit', id: selected.id })} onStatus={() => setModal({ mode: 'status', id: selected.id })} onRemove={() => setModal({ mode: 'remove', id: selected.id })} />}
     {!readOnly && modal?.mode === 'status' && selected && <StatusForm room={selected} onClose={() => setModal({ mode: 'view', id: selected.id })} onSave={(nextStatus, note) => { setRooms(rooms.map(room => room.id === selected.id ? { ...room, status: nextStatus, note } : room)); setModal({ mode: 'view', id: selected.id }); }} />}
-    {!readOnly && modal?.mode === 'remove' && selected && <Modal title={'Remove ' + selected.name + '?'} onClose={close} compact><div className="room-modal-body"><p>This removes the room from the demo inventory. You can undo the removal from the room list.</p></div><footer><button className="account-secondary" onClick={() => setModal({ mode: 'view', id: selected.id })}>Cancel</button><button className="room-danger" onClick={() => { setRemoved(selected); setRooms(rooms.filter(room => room.id !== selected.id)); close(); }}>Remove Room</button></footer></Modal>}
+    {!readOnly && modal?.mode === 'remove' && selected && <Modal title={'Remove ' + selected.name + '?'} onClose={close} compact><div className="room-modal-body"><p>You can undo the removal from the room list.</p></div><footer><button className="account-secondary" onClick={() => setModal({ mode: 'view', id: selected.id })}>Cancel</button><button className="room-danger" onClick={() => { setRemoved(selected); setRooms(rooms.filter(room => room.id !== selected.id)); close(); }}>Remove Room</button></footer></Modal>}
   </>;
 }
 
