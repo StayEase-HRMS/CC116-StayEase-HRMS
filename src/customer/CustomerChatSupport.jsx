@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
-import { CustomerSideBar } from "../components/sidebar";
-import PageHeader from "../components/header";
 
 // Placeholder data — replace with API/state later.
 const AGENT = { name: "John Doe", role: "Customer service assistant" };
@@ -144,25 +142,17 @@ export default function CustomerChatSupport() {
   }
 
   return (
-    <main className="flex h-dvh flex-col overflow-hidden">
-      <PageHeader title="Customer service" desc="View upcoming stays, manage contactless check-in." />
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-slate-100">
+      <ChatHeader name={AGENT.name} role={AGENT.role} />
 
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        <CustomerSideBar />
-
-        <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-slate-100">
-          <ChatHeader name={AGENT.name} role={AGENT.role} />
-
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
-            {messages.map((message) => (
-              <MessageBubble key={message.id} message={message} />
-            ))}
-            <div ref={bottomRef} />
-          </div>
-
-          <MessageInput value={draft} onChange={setDraft} onSubmit={handleSubmit} />
-        </section>
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
+        {messages.map((message) => (
+          <MessageBubble key={message.id} message={message} />
+        ))}
+        <div ref={bottomRef} />
       </div>
-    </main>
+
+      <MessageInput value={draft} onChange={setDraft} onSubmit={handleSubmit} />
+    </section>
   );
 }

@@ -1,11 +1,8 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, RotateCcw, Search } from "lucide-react";
-import { CustomerSideBar } from "../components/sidebar";
-import PageHeader from "../components/header";
 import RoomCard from "../components/RoomCard";
 import RoomHero from "../components/RoomHero";
 import { rooms } from "./mock-data-rooms";
-import logo from "../assets/logo.png";
 
 const PAGE_SIZE = 6;
 
@@ -156,37 +153,26 @@ export default function CustomerRooms() {
   const featuredRooms = rooms.filter((room) => room.featured);
 
   return (
-    <main className="flex min-h-screen flex-col">
-      <PageHeader
-        title="Rooms & Accommodation"
-        desc="Browse over a wide selection of rooms and accommodations according to your taste."
-      />
+    <section className="bg-linear-to-b from-[#e8eefb] to-[#f6f8fd] p-4">
+      <div className="mx-auto max-w-6xl">
+        <RoomHero rooms={featuredRooms} />
 
-      <div className="flex flex-1">
-        <CustomerSideBar />
+        <RoomFilters filters={filters} onChange={updateFilter} onReset={resetFilters} />
 
-        <section className="min-w-0 flex-1 bg-linear-to-b from-[#e8eefb] to-[#f6f8fd] px-4 pb-10">
-          <div className="mt-4 mx-auto max-w-6xl">
-            <RoomHero rooms={featuredRooms} />
-
-            <RoomFilters filters={filters} onChange={updateFilter} onReset={resetFilters} />
-
-            {pageRooms.length === 0 ? (
-              <p className="py-10 text-center text-gray-500">No rooms match your filters.</p>
-            ) : (
-              <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {pageRooms.map((room) => (
-                  <RoomCard key={room.id} room={room} />
-                ))}
-              </div>
-            )}
-
-            {totalPages > 1 && (
-              <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
-            )}
+        {pageRooms.length === 0 ? (
+          <p className="py-10 text-center text-gray-500">No rooms match your filters.</p>
+        ) : (
+          <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {pageRooms.map((room) => (
+              <RoomCard key={room.id} room={room} />
+            ))}
           </div>
-        </section>
+        )}
+
+        {totalPages > 1 && (
+          <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
+        )}
       </div>
-    </main>
+    </section>
   );
 }

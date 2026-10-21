@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { CalendarX, Pen, Key } from "lucide-react";
-import { CustomerSideBar } from "../components/sidebar";
-import PageHeader from "../components/header";
 import { reservations, recommendedRooms } from "./mock-data-reservation";
 import room_1 from "../assets/room_1.jpg";
 
@@ -187,7 +185,7 @@ function EmptyReservations() {
   );
 }
 
-function RoomCard({ room }) {
+function RecommendedRoomCard({ room }) {
   return (
     <article className="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm">
       {/* Placeholder — swap for <img src={...} alt={room.name} className="h-40 w-full object-cover" /> */}
@@ -220,7 +218,7 @@ function RecommendedRooms({ rooms }) {
       <h2 className="mb-3 text-xl font-bold">Recommended rooms</h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {rooms.map((room) => (
-          <RoomCard key={room.id} room={room} />
+          <RecommendedRoomCard key={room.id} room={room} />
         ))}
       </div>
     </div>
@@ -241,52 +239,41 @@ export default function CustomerReservations() {
   const visibleReservations = byStatus(activeStatus);
 
   return (
-    <main className="flex min-h-screen flex-col">
-      <PageHeader
-        title="My reservations"
-        desc="View upcoming stays, manage contactless check-in."
-      />
+    <section className="min-w-0 flex-1 bg-slate-100 p-4">
+      {reservations.length === 0 ? (
+        <>
+          <EmptyReservations />
+          <RecommendedRooms rooms={recommendedRooms} />
+        </>
+      ) : (
+        <>
+          <ReservationFilters
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            countFor={(status) => byStatus(status).length}
+          />
 
-      <div className="flex flex-1">
-        <CustomerSideBar />
-
-        <section className="min-w-0 flex-1 bg-slate-100 p-4">
-          {reservations.length === 0 ? (
-            <>
-              <EmptyReservations />
-              <RecommendedRooms rooms={recommendedRooms} />
-            </>
-          ) : (
-            <>
-              <ReservationFilters
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                countFor={(status) => byStatus(status).length}
-              />
-
-              {currentStay && (
-                <div className="mt-4">
-                  <BookingCard booking={currentStay} tag="Current stay" />
-                </div>
-              )}
-
-              <p className="mt-4 font-bold text-lg">Upcoming stay</p>
-
-              {visibleReservations.length === 0 ? (
-                <p className="mt-6 text-center text-gray-500">
-                  {currentStay ? "No other reservations to show." : "No reservations to show."}
-                </p>
-              ) : (
-                <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-2">
-                  {visibleReservations.map((booking) => (
-                    <BookingCard key={booking.ref} booking={booking} />
-                  ))}
-                </div>
-              )}
-            </>
+          {currentStay && (
+            <div className="mt-4">
+              <BookingCard booking={currentStay} tag="Current stay" />
+            </div>
           )}
-        </section>
-      </div>
-    </main>
+
+          <p className="mt-4 font-bold text-lg">Upcoming stay</p>
+
+          {visibleReservations.length === 0 ? (
+            <p className="mt-6 text-center text-gray-500">
+              {currentStay ? "No other reservations to show." : "No reservations to show."}
+            </p>
+          ) : (
+            <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-2">
+              {visibleReservations.map((booking) => (
+                <BookingCard key={booking.ref} booking={booking} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </section>
   );
 }
