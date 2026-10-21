@@ -311,21 +311,18 @@ function Navbar() {
             <a
               key={l.label}
               href={l.href}
-              className="text-[13px] font-medium text-slate-700 transition-colors hover:text-[#a8761a]"
-            >
+              className="text-[13px] font-medium text-slate-700 transition-colors hover:text-[#a8761a]">
               {l.label}
             </a>
           ))}
         </nav>
 
         <div className="ml-auto hidden items-center gap-5 lg:flex">
-          <a href="/" className="text-[13px] font-semibold text-slate-900 hover:text-[#a8761a]">
+          <a href="/rooms" className="text-[13px] font-semibold text-slate-900 hover:text-[#a8761a]">
             Sign In
           </a>
           <a
-            href="/dashboard"
-            className="rounded-lg bg-[#d9a441] px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-[#c8922c]"
-          >
+            className="rounded-lg bg-[#d9a441] px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-[#c8922c]">
             Book Now
           </a>
         </div>

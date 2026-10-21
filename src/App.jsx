@@ -6,15 +6,23 @@ import CustomerReservation from "./customer/CustomerReservation";
 import LandingPage from "./LandingPage";
 import CustomerChatSupport from "./customer/CustomerChatSupport";
 import CustomerRooms from "./customer/CustomerRooms";
+import CustomerPage from "./customer/CustomerPage";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/my-reservation" element={<CustomerReservation />} />
-        <Route path="/rooms" element={<CustomerRooms />} />
-        <Route path="/chat-support" element={<CustomerChatSupport />} />
+
+        {/*for testing, remove this later*/}
+        <Route path="/customer" element={<CustomerPage />} /> 
+
+        {/* Customer side routing*/}
+        <Route path="/my-reservation" element={<CustomerPage />} />
+        <Route path="/rooms" element={<CustomerPage />} />
+        <Route path="/chat-support" element={<CustomerPage />} />
+
+        {/* Admin/Staff side routing*/}
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin/reviews" element={<AdminPage />} />
         <Route path="/admin/reports" element={<AdminPage />} />
