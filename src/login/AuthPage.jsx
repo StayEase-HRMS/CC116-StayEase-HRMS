@@ -1,19 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
+import { ArrowLeft, ArrowRight, AtSign, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import {
-  ArrowLeft,
-  ArrowRight,
-  AtSign,
-  Check,
-  Eye,
-  EyeOff,
-  Info,
-  KeyRound,
-  Lock,
-  Mail,
-  MailCheck,
-  OctagonAlert,
-} from "lucide-react";
+  ROLE_HOME,
+  requestPasswordReset,
+  signIn,
+  signOut,
+  updatePassword,
+  verifyRecoveryOtp,
+} from "./auth";
 import logo from "../assets/logo.png";
+import { CancelModal, CheckEmailModal, SuccessModal } from "./AuthModals";
+import { FONT_STACK, GOLD_LINK, INK, INPUT_BG, MUTED, PrimaryButton, maskEmail } from "./authShared";
 
 /* ------------------------------------------------------------------ */
 /*  Config                                                             */
@@ -25,14 +22,7 @@ const HERO_IMAGE =
 const OTP_LENGTH = 6;
 const OTP_LIFETIME_SECONDS = 10 * 60;
 const RESEND_COOLDOWN_SECONDS = 60;
-const REDIRECT_DELAY_MS = 2500;
 const MIN_PASSWORD_LENGTH = 8;
-
-/* Shared class tokens */
-const INK = "text-[#111c27]";
-const MUTED = "text-[#475f85]";
-const GOLD_LINK = "text-[#7a5516]";
-const INPUT_BG = "bg-[#ecf2fe]";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -40,32 +30,12 @@ const INPUT_BG = "bg-[#ecf2fe]";
 
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
-function maskEmail(email) {
-  const [local = "", domain = ""] = email.split("@");
-  if (!domain) return email;
-  const masked =
-    local.length > 2 ? `${local[0]}${"*".repeat(Math.min(local.length - 2, 4))}${local.at(-1)}` : `${local[0] ?? ""}****`;
-  return `${masked}@${domain}`;
-}
-
 const mmss = (s) =>
   `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
 /* ------------------------------------------------------------------ */
 /*  Building blocks                                                    */
 /* ------------------------------------------------------------------ */
-
-function PrimaryButton({ children, className = "", ...props }) {
-  return (
-    <button
-      type="submit"
-      {...props}
-      className={`flex h-12 w-full items-center justify-center gap-1.5 rounded-lg bg-[#d6a75f] text-sm font-semibold text-white shadow-md shadow-[#d6a75f]/30 transition-colors hover:bg-[#c8964c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a8761a] disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
-    >
-      {children}
-    </button>
-  );
-}
 
 function Field({
   id,
@@ -151,12 +121,23 @@ function Heading({ title, children }) {
   );
 }
 
+function FormError({ children }) {
+  return (
+    <p
+      role="alert"
+      className="rounded-lg border border-[#f3c9c9] bg-[#fde4e4] px-3 py-2 text-[13px] font-medium text-[#b42318]"
+    >
+      {children}
+    </p>
+  );
+}
+
 /** Split-screen layout shared by every step. */
 function AuthShell({ onBack, children }) {
   return (
     <div
       className="flex min-h-screen bg-white"
-      style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}
+      style={{ fontFamily: FONT_STACK }}
     >
       {/* Form side */}
       <section className="relative flex w-full flex-col items-center justify-center px-6 py-16 lg:w-[41.25%] lg:shrink-0">
@@ -199,46 +180,6 @@ function AuthShell({ onBack, children }) {
   );
 }
 
-/** Centered modal card with the gold top hairline. */
-function Modal({ children, onClose, label }) {
-  useEffect(() => {
-    if (!onClose) return;
-    const onKey = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[2px]"
-      style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={label}
-        className="relative w-full max-w-[440px] overflow-hidden rounded-2xl border border-slate-800 bg-white px-7 pb-8 pt-9 text-center shadow-2xl shadow-slate-900/30"
-      >
-        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#d6a75f] to-transparent" />
-        {children}
-      </div>
-    </div>
-  );
-}
-
-/** Icon surrounded by soft concentric gold rings (cancel / success dialogs). */
-function RingIcon({ children }) {
-  return (
-    <div className="mx-auto flex h-[100px] w-[100px] items-center justify-center rounded-full bg-[#fbeccb]/60">
-      <div className="flex h-[78px] w-[78px] items-center justify-center rounded-full border border-[#ecd9b8] bg-[#fbf3e2]">
-        <div className="flex h-[58px] w-[58px] items-center justify-center rounded-full border border-[#ecd9b8] bg-[#f3efe6]">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /*  Steps                                                              */
 /* ------------------------------------------------------------------ */
@@ -247,14 +188,25 @@ function LoginStep({ onForgot, onLogin }) {
   const [identity, setIdentity] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
+  const [formError, setFormError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     const next = {};
     if (!identity.trim()) next.identity = "Enter your username or email.";
     if (!password) next.password = "Enter your password.";
     setErrors(next);
-    if (Object.keys(next).length === 0) onLogin({ identity: identity.trim(), password });
+    setFormError("");
+    if (Object.keys(next).length > 0) return;
+
+    setBusy(true);
+    try {
+      await onLogin({ identity: identity.trim(), password });
+    } catch (err) {
+      setFormError(err.message);
+      setBusy(false); // on success the page navigates away, so only reset on failure
+    }
   };
 
   return (
@@ -287,8 +239,9 @@ function LoginStep({ onForgot, onLogin }) {
         >
           Forgot Password?
         </button>
-        <PrimaryButton>
-          Log In <ArrowRight className="h-4 w-4" />
+        {formError && <FormError>{formError}</FormError>}
+        <PrimaryButton loading={busy}>
+          {busy ? "Logging in…" : <>Log In <ArrowRight className="h-4 w-4" /></>}
         </PrimaryButton>
       </form>
     </AuthShell>
@@ -297,15 +250,23 @@ function LoginStep({ onForgot, onLogin }) {
 
 function ForgotStep({ email, setEmail, onBack, onSend }) {
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     if (!isEmail(email.trim())) {
       setError("Enter a valid work email address.");
       return;
     }
     setError("");
-    onSend();
+    setBusy(true);
+    try {
+      await onSend(email.trim());
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -326,20 +287,21 @@ function ForgotStep({ email, setEmail, onBack, onSend }) {
           error={error}
           autoFocus
         />
-        <PrimaryButton>
-          Send Reset Link <ArrowRight className="h-4 w-4" />
+        <PrimaryButton loading={busy}>
+          {busy ? "Sending…" : <>Send Reset Link <ArrowRight className="h-4 w-4" /></>}
         </PrimaryButton>
       </form>
     </AuthShell>
   );
 }
 
-function OtpStep({ email, onBack, onVerified }) {
+function OtpStep({ email, onBack, onVerified, onResend }) {
   const [digits, setDigits] = useState(Array(OTP_LENGTH).fill(""));
   const [secondsLeft, setSecondsLeft] = useState(OTP_LIFETIME_SECONDS);
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
   const [error, setError] = useState("");
   const refs = useRef([]);
+  const [busy, setBusy] = useState(false);
 
   // One ticking interval drives both the expiry timer and the resend cooldown.
   useEffect(() => {
@@ -376,23 +338,39 @@ function OtpStep({ email, onBack, onVerified }) {
     refs.current[Math.min(text.length, OTP_LENGTH - 1)]?.focus();
   };
 
-  const resend = () => {
-    if (cooldown > 0) return;
-    setDigits(Array(OTP_LENGTH).fill(""));
-    setSecondsLeft(OTP_LIFETIME_SECONDS);
-    setCooldown(RESEND_COOLDOWN_SECONDS);
-    setError("");
-    refs.current[0]?.focus();
-    // TODO: call your "resend OTP" endpoint here.
+  const resend = async () => {
+    if (cooldown > 0 || busy) return;
+    setBusy(true);
+    try {
+      await onResend();
+      setDigits(Array(OTP_LENGTH).fill(""));
+      setSecondsLeft(OTP_LIFETIME_SECONDS);
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+      setError("");
+      refs.current[0]?.focus();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     const code = digits.join("");
     if (secondsLeft === 0) return setError("This code has expired. Request a new one.");
     if (code.length < OTP_LENGTH) return setError("Enter the full 6-digit code.");
-    // TODO: verify `code` against your API. Any 6-digit code passes for now.
-    onVerified(code);
+
+    setBusy(true);
+    try {
+      await onVerified(code);
+    } catch (err) {
+      setError(err.message);
+      setDigits(Array(OTP_LENGTH).fill(""));
+      refs.current[0]?.focus();
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -446,8 +424,8 @@ function OtpStep({ email, onBack, onVerified }) {
           {error || "Enter 6-digit code"}
         </p>
 
-        <PrimaryButton className="mt-6">
-          Verify Code <ArrowRight className="h-4 w-4" />
+        <PrimaryButton className="mt-6" loading={busy}>
+          {busy ? "Verifying…" : <>Verify Code <ArrowRight className="h-4 w-4" /></>}
         </PrimaryButton>
       </form>
 
@@ -456,7 +434,7 @@ function OtpStep({ email, onBack, onVerified }) {
         <button
           type="button"
           onClick={resend}
-          disabled={cooldown > 0}
+          disabled={cooldown > 0 || busy}
           className={`font-semibold ${GOLD_LINK} hover:underline disabled:cursor-not-allowed disabled:no-underline disabled:opacity-60`}
         >
           {cooldown > 0 ? `Resend Code (${cooldown}s)` : "Resend Code"}
@@ -470,15 +448,27 @@ function ResetStep({ onBack, onSubmit }) {
   const [pw, setPw] = useState("");
   const [confirm, setConfirm] = useState("");
   const [errors, setErrors] = useState({});
+  const [formError, setFormError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
+    setFormError("");
     const next = {};
     if (pw.length < MIN_PASSWORD_LENGTH)
       next.pw = `Use at least ${MIN_PASSWORD_LENGTH} characters.`;
     if (confirm !== pw) next.confirm = "Passwords do not match.";
     setErrors(next);
-    if (Object.keys(next).length === 0) onSubmit(pw);
+    if (Object.keys(next).length > 0) return;
+
+    setBusy(true);
+    try {
+      await onSubmit(pw);
+    } catch (err) {
+      setFormError(err.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -504,7 +494,8 @@ function ResetStep({ onBack, onSubmit }) {
           autoComplete="new-password"
           error={errors.confirm}
         />
-        <PrimaryButton>Reset Password</PrimaryButton>
+        {formError && <FormError>{formError}</FormError>}
+        <PrimaryButton loading={busy}>{busy ? "Updating…" : "Reset Password"}</PrimaryButton>
       </form>
     </AuthShell>
   );
@@ -514,124 +505,6 @@ function ResetStep({ onBack, onSubmit }) {
 /*  Modals                                                             */
 /* ------------------------------------------------------------------ */
 
-function CheckEmailModal({ email, onContinue }) {
-  return (
-    <Modal label="Check your email">
-      <div className="relative mx-auto h-20 w-20">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#d3f3de]">
-          <MailCheck className="h-9 w-9 text-[#1f6b3d]" strokeWidth={2.2} />
-        </div>
-        <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#d6a75f] text-[#5b3d08]">
-          <KeyRound className="h-3.5 w-3.5" />
-        </span>
-      </div>
-      <h2 className={`mt-6 text-2xl font-extrabold tracking-tight ${INK}`}>Check Your Email</h2>
-      <p className="mx-auto mt-3 max-w-[290px] text-sm leading-relaxed text-slate-600">
-        We've sent a verification code to your registered email address.
-      </p>
-      <p className="mt-4">
-        <span
-          className={`inline-flex items-center gap-2 rounded-lg ${INPUT_BG} px-3 py-1.5 text-[13px] font-semibold ${MUTED}`}
-        >
-          <Mail className="h-3.5 w-3.5 text-[#7a5516]" /> {maskEmail(email)}
-        </span>
-      </p>
-
-      <div className={`mt-5 flex gap-2.5 rounded-xl ${INPUT_BG} p-4 text-left`}>
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#7a5516]" />
-        <div>
-          <p className={`text-sm font-semibold ${INK}`}>Didn't receive an email?</p>
-          <p className={`mt-1 text-xs leading-relaxed ${MUTED}`}>
-            Please check your junk or spam folder, or allow up to 60 seconds before requesting a
-            replacement token.
-          </p>
-        </div>
-      </div>
-
-      <PrimaryButton type="button" onClick={onContinue} className="mt-5">
-        Enter Verification Code <ArrowRight className="h-4 w-4" />
-      </PrimaryButton>
-    </Modal>
-  );
-}
-
-function CancelModal({ onYes, onNo }) {
-  return (
-    <Modal label="Cancel password change" onClose={onNo}>
-      <RingIcon>
-        <OctagonAlert className="h-9 w-9 fill-[#c01f1f] text-white" strokeWidth={2} />
-      </RingIcon>
-      <h2 className={`mt-6 text-2xl font-extrabold tracking-tight ${INK}`}>
-        Cancel Password Change?
-      </h2>
-      <p className={`mx-auto mt-3 max-w-[360px] text-sm leading-relaxed ${MUTED}`}>
-        Are you sure you want to cancel changing your password? You will have to enter your old
-        password again to login.
-      </p>
-      <div className="mx-auto mt-6 h-1 rounded-full bg-[#dfeafb]" />
-      <div className="mt-6 grid grid-cols-2 gap-5">
-        <button
-          type="button"
-          onClick={onYes}
-          className="h-11 rounded-lg bg-[#a8762f] text-sm font-semibold text-white transition-colors hover:bg-[#95661f]"
-        >
-          Yes
-        </button>
-        <button
-          type="button"
-          autoFocus
-          onClick={onNo}
-          className="h-11 rounded-lg bg-[#d6a75f] text-sm font-semibold text-white transition-colors hover:bg-[#c8964c]"
-        >
-          No
-        </button>
-      </div>
-    </Modal>
-  );
-}
-
-function SuccessModal({ onDone }) {
-  const [filled, setFilled] = useState(false);
-
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => setFilled(true));
-    const t = setTimeout(onDone, REDIRECT_DELAY_MS);
-    return () => {
-      cancelAnimationFrame(raf);
-      clearTimeout(t);
-    };
-  }, [onDone]);
-
-  return (
-    <Modal label="Password successfully reset">
-      <RingIcon>
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1f6b3d]">
-          <Check className="h-5 w-5 text-white" strokeWidth={3} />
-        </span>
-      </RingIcon>
-      <h2 className={`mt-6 text-2xl font-extrabold tracking-tight ${INK}`}>
-        Password Successfully Reset
-      </h2>
-      <p className={`mx-auto mt-3 max-w-[340px] text-sm leading-relaxed ${MUTED}`}>
-        Your password has been updated. You can now log in with your new credentials.
-      </p>
-      <div className="mx-auto mt-6 h-1 overflow-hidden rounded-full bg-[#dfeafb]">
-        <div
-          className="h-full rounded-full bg-[#d6a75f] transition-[width] ease-linear"
-          style={{ width: filled ? "100%" : "0%", transitionDuration: `${REDIRECT_DELAY_MS}ms` }}
-        />
-      </div>
-      <button
-        type="button"
-        onClick={onDone}
-        className="mt-6 h-11 w-full rounded-lg bg-[#d6a75f] text-sm font-semibold text-white"
-      >
-        Redirecting to Login
-      </button>
-    </Modal>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /*  Page / flow controller                                             */
 /* ------------------------------------------------------------------ */
@@ -640,11 +513,13 @@ function SuccessModal({ onDone }) {
  * Flow: login → forgot → (check-email modal) → otp → reset → (success modal) → login
  * Pressing Back on the reset step opens the "Cancel Password Change?" modal.
  *
+ * Auth calls live in ./api/auth.js (Supabase).
+ *
  * Props:
- *   onLogin({ identity, password })  called when the login form passes validation
- *   onPasswordReset(newPassword)     called when a new password is submitted
+ *   onLoginSuccess({ user, session, role })  optional; by default the browser is sent to
+ *                                            ROLE_HOME[role] (admin → /admin, etc.)
  */
-export default function AuthPage({ onLogin = () => {}, onPasswordReset = () => {} }) {
+export default function AuthPage({ onLoginSuccess }) {
   const [step, setStep] = useState("login"); // login | forgot | otp | reset
   const [modal, setModal] = useState(null); // checkEmail | cancel | success | null
   const [email, setEmail] = useState("");
@@ -654,18 +529,44 @@ export default function AuthPage({ onLogin = () => {}, onPasswordReset = () => {
     setStep("login");
   }, []);
 
+  const handleLogin = async (credentials) => {
+    const result = await signIn(credentials);
+    if (onLoginSuccess) onLoginSuccess(result);
+    else window.location.assign(ROLE_HOME[result.role] ?? "/");
+  };
+
+  const handleSendCode = async (address) => {
+    await requestPasswordReset(address);
+    setEmail(address);
+    setModal("checkEmail");
+  };
+
+  const handleVerifyCode = async (code) => {
+    await verifyRecoveryOtp(email, code);
+    setStep("reset");
+  };
+
+  const handleNewPassword = async (password) => {
+    await updatePassword(password);
+    await signOut(); // the recovery session must not stay logged in; user logs in with the new password
+    setModal("success");
+  };
+
+  const handleCancelReset = async () => {
+    await signOut(); // drop the temporary recovery session
+    toLogin();
+  };
+
   return (
     <>
-      {step === "login" && (
-        <LoginStep onForgot={() => setStep("forgot")} onLogin={onLogin} />
-      )}
+      {step === "login" && <LoginStep onForgot={() => setStep("forgot")} onLogin={handleLogin} />}
 
       {step === "forgot" && (
         <ForgotStep
           email={email}
           setEmail={setEmail}
           onBack={() => setStep("login")}
-          onSend={() => setModal("checkEmail")}
+          onSend={handleSendCode}
         />
       )}
 
@@ -673,18 +574,13 @@ export default function AuthPage({ onLogin = () => {}, onPasswordReset = () => {
         <OtpStep
           email={email}
           onBack={() => setStep("forgot")}
-          onVerified={() => setStep("reset")}
+          onVerified={handleVerifyCode}
+          onResend={() => requestPasswordReset(email)}
         />
       )}
 
       {step === "reset" && (
-        <ResetStep
-          onBack={() => setModal("cancel")}
-          onSubmit={(pw) => {
-            onPasswordReset(pw);
-            setModal("success");
-          }}
-        />
+        <ResetStep onBack={() => setModal("cancel")} onSubmit={handleNewPassword} />
       )}
 
       {modal === "checkEmail" && (
@@ -696,7 +592,7 @@ export default function AuthPage({ onLogin = () => {}, onPasswordReset = () => {
           }}
         />
       )}
-      {modal === "cancel" && <CancelModal onYes={toLogin} onNo={() => setModal(null)} />}
+      {modal === "cancel" && <CancelModal onYes={handleCancelReset} onNo={() => setModal(null)} />}
       {modal === "success" && <SuccessModal onDone={toLogin} />}
     </>
   );
