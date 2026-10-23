@@ -318,10 +318,11 @@ function Navbar() {
         </nav>
 
         <div className="ml-auto hidden items-center gap-5 lg:flex">
-          <a href="/rooms" className="text-[13px] font-semibold text-slate-900 hover:text-[#a8761a]">
+          <a href="/login" className="text-[13px] font-semibold text-slate-900 hover:text-[#a8761a]">
             Sign In
           </a>
           <a
+            href="#booking"
             className="rounded-lg bg-[#d9a441] px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-[#c8922c]">
             Book Now
           </a>
@@ -352,7 +353,7 @@ function Navbar() {
               </a>
             ))}
             <div className="mt-2 flex items-center gap-4">
-              <a href="/" className="text-sm font-semibold text-slate-900">
+              <a href="/login" className="text-sm font-semibold text-slate-900">
                 Sign In
               </a>
               <a

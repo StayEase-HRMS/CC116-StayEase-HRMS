@@ -1,0 +1,542 @@
+
+.account-modal-backdrop,
+.account-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 20px;
+  background: rgba(35, 45, 60, 0.48);
+  backdrop-filter: blur(3px);
+}
+
+.account-modal-backdrop {
+  z-index: 1000;
+}
+
+.account-confirm-backdrop {
+  z-index: 1100;
+}
+
+.account-modal {
+  position: relative;
+  display: block;
+  flex: 0 1 810px;
+  box-sizing: border-box;
+  width: 810px;
+  max-width: calc(100vw - 40px);
+  height: auto;
+  min-height: 0;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #e4eaf3;
+  border-radius: 24px;
+  background: #fff;
+  color: #192438;
+  font-family: inherit;
+  box-shadow: 0 18px 55px rgba(25, 39, 58, 0.2);
+}
+
+.account-modal form {
+  display: block;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.account-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 28px;
+  border-bottom: 1px solid #e8edf5;
+}
+
+.account-modal-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #fff5e5;
+  color: #c98922;
+}
+
+.account-modal-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-modal-header h2 {
+  margin: 0 0 6px;
+  color: #192438;
+  font-size: 21px;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.account-modal-header p {
+  margin: 0;
+  color: #62799e;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.account-close,
+.account-confirm-close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #8195b3;
+  cursor: pointer;
+}
+
+.account-close:hover,
+.account-confirm-close:hover {
+  background: #f3f5f9;
+  color: #192438;
+}
+
+.account-form-body {
+  padding: 20px 28px 0;
+}
+
+.account-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 22px;
+}
+
+.account-form-grid > label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  color: #344665;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.account-form-grid label > span {
+  color: #e34455;
+}
+
+.account-form-grid input,
+.account-form-grid select {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #cbd8eb;
+  border-radius: 9px;
+  outline: none;
+  background: #fff;
+  color: #273957;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.account-form-grid input::placeholder {
+  color: #8ba0c0;
+}
+
+.account-form-grid input:focus,
+.account-form-grid select:focus {
+  border-color: #d69c38;
+  box-shadow: 0 0 0 3px rgba(214, 156, 56, 0.13);
+}
+
+.account-form-grid input:read-only,
+.account-form-grid select:disabled {
+  background: #f0f3f8;
+  color: #7588a5;
+  cursor: not-allowed;
+}
+
+.account-form-grid input[name="accountId"] {
+  font-family: monospace;
+  letter-spacing: 0.4px;
+}
+
+.account-form-grid label small {
+  color: #8192ac;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.account-password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.account-password-field input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 44px 0 12px;
+  border: 1px solid #cbd8eb;
+  border-radius: 10px;
+  outline: none;
+  background: #fff;
+  color: #273957;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.account-password-field input:focus {
+  border-color: #d69c38;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(214, 156, 56, 0.13);
+}
+
+.account-password-field button {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: #62799e;
+  cursor: pointer;
+}
+
+.account-password-field button:hover {
+  background: #f4f6fa;
+  color: #d09932;
+}
+
+.account-meta {
+  margin: 16px 0 0;
+  color: #7183a0;
+  font-size: 12px;
+}
+
+.account-form-error {
+  margin: 15px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #f2c5ca;
+  border-radius: 8px;
+  background: #fff0f1;
+  color: #a52232;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.account-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 22px 28px 0;
+  padding: 18px 0 20px;
+  border-top: 1px solid #e8edf5;
+}
+
+.account-secondary,
+.account-submit,
+.account-status-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.account-secondary {
+  border-color: #d5e0f0;
+  background: #fff;
+  color: #344665;
+}
+
+.account-secondary:hover {
+  background: #f5f7fb;
+}
+
+.account-submit {
+  background: #d99d35;
+  color: #fff;
+}
+
+.account-submit:hover {
+  background: #c78922;
+}
+
+.account-status-action {
+  margin-right: auto;
+  border-color: #f0c6c9;
+  background: #fff1f2;
+  color: #b42332;
+}
+
+.account-status-action:hover {
+  background: #ffe4e6;
+}
+
+.account-secondary:disabled,
+.account-submit:disabled,
+.account-status-action:disabled,
+.account-confirm-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.account-confirm-dialog {
+  position: relative;
+  display: block;
+  flex: 0 1 580px;
+  box-sizing: border-box;
+  width: 580px;
+  height: auto;
+  min-height: 0;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 32px 36px 30px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  background: #fff;
+  color: #192438;
+  font-family: inherit;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(20, 35, 55, 0.24);
+}
+
+.account-confirm-dialog .account-confirm-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.account-confirm-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 20px;
+  border: 7px solid #fbf0dd;
+  border-radius: 50%;
+}
+
+.account-warning-icon {
+  background: #fff8ed;
+  color: #d62929;
+}
+
+.account-confirm-dialog h2 {
+  margin: 0 0 12px;
+  padding: 0;
+  color: #172333;
+  font-size: 25px;
+  font-weight: 750;
+  line-height: 1.3;
+  letter-spacing: -0.4px;
+}
+
+.account-confirm-dialog > p {
+  max-width: 420px;
+  margin: 0 auto;
+  color: #526e96;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.account-confirm-divider {
+  width: 100%;
+  height: 5px;
+  margin: 24px 0;
+  border-radius: 5px;
+  background: #e5efff;
+}
+
+.account-confirm-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.account-confirm-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.account-confirm-yes {
+  background: #a97b2e;
+}
+
+.account-confirm-yes:hover {
+  background: #906521;
+}
+
+.account-confirm-no {
+  background: #d9a858;
+}
+
+.account-confirm-no:hover {
+  background: #c6913d;
+}
+
+.account-confirm-dialog .account-form-error {
+  margin: 14px 0 0;
+  text-align: left;
+}
+
+.admin-badge.system-admin {
+  border: 1px solid #f0d18e;
+  background: #fff0cf;
+  color: #95620d;
+}
+
+.admin-badge.staff {
+  border: 1px solid #f4dfbd;
+  background: #fff4e4;
+  color: #99651b;
+}
+
+.admin-badge.guest {
+  border: 1px solid #d4e3fc;
+  background: #e2edff;
+  color: #344665;
+}
+
+.account-toast {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 400px;
+  max-width: calc(100vw - 40px);
+  padding: 16px;
+  border: 1px solid #e4e7eb;
+  border-radius: 14px;
+  background: #fff;
+  color: #20252d;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.16);
+  animation: account-toast-enter 0.35s ease-out both;
+}
+
+.account-toast-icon {
+  flex-shrink: 0;
+  color: #27bf60;
+}
+
+.account-toast-message {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.account-toast-message strong {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.account-toast-message span {
+  color: #444b55;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.account-toast-close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #777;
+  cursor: pointer;
+}
+
+.account-toast-close:hover {
+  background: #f2f4f7;
+}
+
+.account-toast-leaving {
+  pointer-events: none;
+  animation: account-toast-exit 0.4s ease-in forwards;
+}
+
+@keyframes account-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes account-toast-exit {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}

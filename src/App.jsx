@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
@@ -13,13 +14,15 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Landing page */}
         <Route path="/" element={<LandingPage />} />
 
         {/*for testing, remove this later*/}
-        <Route path="/customer" element={<CustomerPage />} /> 
+        <Route path="/customer" element={<CustomerPage />} />
 
-        <Route path="/login" element={<AuthPage />} /> 
-        <Route path="/admin/login" element={<AuthPage />} /> 
+        {/* Login routes */}
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="/admin/login" element={<AuthPage />} />
 
         {/* Customer side routing*/}
         <Route path="/my-reservation" element={<CustomerPage />} />
@@ -27,24 +30,17 @@ function App() {
         <Route path="/chat-support" element={<CustomerPage />} />
 
         {/* Admin/Staff side routing*/}
+
+        {/* Admin dashboard and management pages */}
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="/admin/reviews" element={<AdminPage />} />
-        <Route path="/admin/reports" element={<AdminPage />} />
-        <Route path="/admin/users" element={<AdminPage />} />
-        <Route path="/admin/rooms" element={<AdminPage />} />
-        <Route path="/admin/reservations" element={<AdminPage />} />
-        <Route path="/admin/account" element={<AdminPage />} />
-        <Route path="/staff/account" element={<AdminPage role="staff" />} />
+        <Route path="/admin/*" element={<AdminPage />} />
+
+        {/* Staff dashboard and management pages */}
         <Route path="/staff" element={<AdminPage role="staff" />} />
-        <Route path="/staff/rooms" element={<AdminPage role="staff" />} />
-        <Route path="/staff/reservations" element={<AdminPage role="staff" />} />
-        <Route path="/staff/support" element={<AdminPage role="staff" />} />
+        <Route path="/staff/*" element={<AdminPage role="staff" />} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
 export default App;
-
-
-

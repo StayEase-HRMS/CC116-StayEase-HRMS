@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, useEffect } from "react";
-import { ArrowLeft, ArrowRight, AtSign, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { ArrowLeft, ArrowRight, AtSign, Eye, EyeOff, Lock, Mail, Phone, User } from "lucide-react";
 import {
   ROLE_HOME,
   requestPasswordReset,
@@ -11,32 +11,24 @@ import {
 import logo from "../assets/logo.png";
 import { CancelModal, CheckEmailModal, SuccessModal } from "./AuthModals";
 import { FONT_STACK, GOLD_LINK, INK, INPUT_BG, MUTED, PrimaryButton, maskEmail } from "./authShared";
-
 /* ------------------------------------------------------------------ */
 /*  Config                                                             */
 /* ------------------------------------------------------------------ */
-
 const HERO_IMAGE =
   "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1400&q=80";
-
 const OTP_LENGTH = 6;
 const OTP_LIFETIME_SECONDS = 10 * 60;
 const RESEND_COOLDOWN_SECONDS = 60;
 const MIN_PASSWORD_LENGTH = 8;
-
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
-
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-
 const mmss = (s) =>
   `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-
 /* ------------------------------------------------------------------ */
 /*  Building blocks                                                    */
 /* ------------------------------------------------------------------ */
-
 function Field({
   id,
   label,
@@ -83,7 +75,6 @@ function Field({
     </div>
   );
 }
-
 function PasswordField({ id, label, value, onChange, placeholder, autoComplete, error, autoFocus }) {
   const [show, setShow] = useState(false);
   return (
@@ -111,7 +102,6 @@ function PasswordField({ id, label, value, onChange, placeholder, autoComplete, 
     />
   );
 }
-
 function Heading({ title, children }) {
   return (
     <div className="text-center">
@@ -120,7 +110,6 @@ function Heading({ title, children }) {
     </div>
   );
 }
-
 function FormError({ children }) {
   return (
     <p
@@ -131,16 +120,15 @@ function FormError({ children }) {
     </p>
   );
 }
-
 /** Split-screen layout shared by every step. */
-function AuthShell({ onBack, children }) {
+function AuthShell({ onBack, children, compact = false }) {
   return (
     <div
-      className="flex min-h-screen bg-white"
+      className={`flex bg-white ${compact ? "h-screen min-h-0 overflow-hidden" : "min-h-screen"}`}
       style={{ fontFamily: FONT_STACK }}
     >
       {/* Form side */}
-      <section className="relative flex w-full flex-col items-center justify-center px-6 py-16 lg:w-[41.25%] lg:shrink-0">
+      <section className={`relative flex w-full flex-col items-center justify-center px-6 ${compact ? "py-3" : "py-16"} lg:w-[41.25%] lg:shrink-0`}>
         {onBack && (
           <button
             type="button"
@@ -150,12 +138,11 @@ function AuthShell({ onBack, children }) {
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
         )}
-        <div className="w-full max-w-[432px]">
-          <img src={logo} alt="StayEase Hospitality Suite" className="mx-auto mb-5 h-24 w-auto" />
+        <div className={`w-full ${compact ? "max-w-[520px]" : "max-w-[432px]"}`}>
+          <img src={logo} alt="StayEase Hospitality Suite" className={`mx-auto ${compact ? "mb-2 h-14" : "mb-5 h-24"} w-auto`} />
           {children}
         </div>
       </section>
-
       {/* Hero side */}
       <aside className="relative hidden flex-1 overflow-hidden bg-gradient-to-br from-[#3a2a1c] via-[#8a6c47] to-[#e9b77a] lg:block">
         <img
@@ -179,18 +166,15 @@ function AuthShell({ onBack, children }) {
     </div>
   );
 }
-
 /* ------------------------------------------------------------------ */
 /*  Steps                                                              */
 /* ------------------------------------------------------------------ */
-
-function LoginStep({ onForgot, onLogin }) {
+function LoginStep({ onForgot, onSignup, onLogin, onBackToLanding }) {
   const [identity, setIdentity] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
   const [busy, setBusy] = useState(false);
-
   const submit = async (e) => {
     e.preventDefault();
     const next = {};
@@ -199,7 +183,6 @@ function LoginStep({ onForgot, onLogin }) {
     setErrors(next);
     setFormError("");
     if (Object.keys(next).length > 0) return;
-
     setBusy(true);
     try {
       await onLogin({ identity: identity.trim(), password });
@@ -208,9 +191,8 @@ function LoginStep({ onForgot, onLogin }) {
       setBusy(false); // on success the page navigates away, so only reset on failure
     }
   };
-
   return (
-    <AuthShell>
+    <AuthShell onBack={onBackToLanding}>
       <Heading title="Welcome Back">Sign in to access your account.</Heading>
       <form onSubmit={submit} noValidate className="mt-8 space-y-4">
         <Field
@@ -232,13 +214,22 @@ function LoginStep({ onForgot, onLogin }) {
           autoComplete="current-password"
           error={errors.password}
         />
-        <button
-          type="button"
-          onClick={onForgot}
-          className={`text-[13px] font-semibold ${GOLD_LINK} hover:underline`}
-        >
-          Forgot Password?
-        </button>
+        <div className="flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={onForgot}
+            className={`text-[13px] font-semibold ${GOLD_LINK} hover:underline`}
+          >
+            Forgot Password?
+          </button>
+          <button
+            type="button"
+            onClick={onSignup}
+            className={`text-[13px] font-semibold ${GOLD_LINK} hover:underline`}
+          >
+            Sign Up
+          </button>
+        </div>
         {formError && <FormError>{formError}</FormError>}
         <PrimaryButton loading={busy}>
           {busy ? "Logging in…" : <>Log In <ArrowRight className="h-4 w-4" /></>}
@@ -247,11 +238,151 @@ function LoginStep({ onForgot, onLogin }) {
     </AuthShell>
   );
 }
-
+function SignupStep({ onBackToLogin, onSignupSuccess }) {
+  const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirm: "",
+    terms: false,
+  });
+  const [errors, setErrors] = useState({});
+  const [formError, setFormError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const set = (key) => (value) => setForm((current) => ({ ...current, [key]: value }));
+  const submit = async (e) => {
+    e.preventDefault();
+    setFormError("");
+    const next = {};
+    if (form.fullName.trim().length < 2) next.fullName = "Enter your full name.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      next.email = "Enter a valid email address.";
+    }
+    if (!form.phone.trim()) next.phone = "Enter your phone number.";
+    if (form.password.length < MIN_PASSWORD_LENGTH) {
+      next.password = `Use at least ${MIN_PASSWORD_LENGTH} characters.`;
+    }
+    if (form.confirm !== form.password) next.confirm = "Passwords do not match.";
+    if (!form.terms) next.terms = "You need to accept the terms to continue.";
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
+    setBusy(true);
+    try {
+      // The provided project files do not include a signup function/service.
+      // Keep the page buildable and show a clear message until one is connected.
+      throw new Error(
+        "Account registration is not connected yet. Connect a signUp function in ./auth to enable account creation."
+      );
+    } catch (err) {
+      setFormError(err?.message || "Unable to create your account. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <AuthShell compact>
+      <Heading title="Create Your Account">
+        Join StayEase to book and manage your stays.
+      </Heading>
+      <form onSubmit={submit} noValidate className="mt-3 space-y-2.5">
+        <Field
+          id="signup-full-name"
+          label="Full Name"
+          icon={User}
+          value={form.fullName}
+          onChange={set("fullName")}
+          placeholder="Enter your full name"
+          autoComplete="name"
+          error={errors.fullName}
+          autoFocus
+        />
+        <div className="grid grid-cols-2 gap-2.5">
+          <Field
+            id="signup-email"
+            label="Email Address"
+            icon={Mail}
+            type="email"
+            value={form.email}
+            onChange={set("email")}
+            placeholder="e.g. alex@stayease.com"
+            autoComplete="email"
+            error={errors.email}
+          />
+          <Field
+            id="signup-phone"
+            label="Phone Number"
+            icon={Phone}
+            type="tel"
+            value={form.phone}
+            onChange={set("phone")}
+            placeholder="Enter phone number"
+            autoComplete="tel"
+            error={errors.phone}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-2.5">
+          <PasswordField
+            id="signup-password"
+            label="Password"
+            value={form.password}
+            onChange={set("password")}
+            placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
+            autoComplete="new-password"
+            error={errors.password}
+          />
+          <PasswordField
+            id="signup-confirm"
+            label="Confirm Password"
+            value={form.confirm}
+            onChange={set("confirm")}
+            placeholder="Confirm password"
+            autoComplete="new-password"
+            error={errors.confirm}
+          />
+        </div>
+        <div className="text-xs">
+          <label className={`flex items-start gap-2 text-[12px] leading-snug ${MUTED}`}>
+            <input
+              type="checkbox"
+              checked={form.terms}
+              onChange={(e) => set("terms")(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[#d6a75f]"
+            />
+            <span>
+              I agree to the{" "}
+              <a href="#" onClick={(e) => e.preventDefault()} className={`font-semibold ${GOLD_LINK} hover:underline`}>
+                Terms of Residency
+              </a>{" "}
+              and{" "}
+              <a href="#" onClick={(e) => e.preventDefault()} className={`font-semibold ${GOLD_LINK} hover:underline`}>
+                Privacy Policy
+              </a>.
+            </span>
+          </label>
+          {errors.terms && (
+            <p role="alert" className="mt-1.5 text-xs font-medium text-[#b42318]">
+              {errors.terms}
+            </p>
+          )}
+        </div>
+        {formError && <FormError>{formError}</FormError>}
+        <PrimaryButton loading={busy}>
+          {busy ? "Creating account…" : <>Sign Up <ArrowRight className="h-4 w-4" /></>}
+        </PrimaryButton>
+        <p className={`text-center text-sm ${MUTED}`}>
+          Already have an account?{" "}
+          <button type="button" onClick={onBackToLogin} className={`font-semibold ${GOLD_LINK} hover:underline`}>
+            Sign In
+          </button>
+        </p>
+      </form>
+    </AuthShell>
+  );
+}
 function ForgotStep({ email, setEmail, onBack, onSend }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-
   const submit = async (e) => {
     e.preventDefault();
     if (!isEmail(email.trim())) {
@@ -268,7 +399,6 @@ function ForgotStep({ email, setEmail, onBack, onSend }) {
       setBusy(false);
     }
   };
-
   return (
     <AuthShell onBack={onBack}>
       <Heading title="Forgot Your Password?">
@@ -294,7 +424,6 @@ function ForgotStep({ email, setEmail, onBack, onSend }) {
     </AuthShell>
   );
 }
-
 function OtpStep({ email, onBack, onVerified, onResend }) {
   const [digits, setDigits] = useState(Array(OTP_LENGTH).fill(""));
   const [secondsLeft, setSecondsLeft] = useState(OTP_LIFETIME_SECONDS);
@@ -302,7 +431,6 @@ function OtpStep({ email, onBack, onVerified, onResend }) {
   const [error, setError] = useState("");
   const refs = useRef([]);
   const [busy, setBusy] = useState(false);
-
   // One ticking interval drives both the expiry timer and the resend cooldown.
   useEffect(() => {
     const id = setInterval(() => {
@@ -311,24 +439,20 @@ function OtpStep({ email, onBack, onVerified, onResend }) {
     }, 1000);
     return () => clearInterval(id);
   }, []);
-
   useEffect(() => {
     refs.current[0]?.focus();
   }, []);
-
   const setDigit = (i, raw) => {
     const d = raw.replace(/\D/g, "").slice(-1);
     setError("");
     setDigits((prev) => prev.map((v, idx) => (idx === i ? d : v)));
     if (d && i < OTP_LENGTH - 1) refs.current[i + 1]?.focus();
   };
-
   const onKeyDown = (i, e) => {
     if (e.key === "Backspace" && !digits[i] && i > 0) refs.current[i - 1]?.focus();
     if (e.key === "ArrowLeft" && i > 0) refs.current[i - 1]?.focus();
     if (e.key === "ArrowRight" && i < OTP_LENGTH - 1) refs.current[i + 1]?.focus();
   };
-
   const onPaste = (e) => {
     const text = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
     if (!text) return;
@@ -337,7 +461,6 @@ function OtpStep({ email, onBack, onVerified, onResend }) {
     setDigits(Array.from({ length: OTP_LENGTH }, (_, i) => text[i] ?? ""));
     refs.current[Math.min(text.length, OTP_LENGTH - 1)]?.focus();
   };
-
   const resend = async () => {
     if (cooldown > 0 || busy) return;
     setBusy(true);
@@ -354,13 +477,11 @@ function OtpStep({ email, onBack, onVerified, onResend }) {
       setBusy(false);
     }
   };
-
   const submit = async (e) => {
     e.preventDefault();
     const code = digits.join("");
     if (secondsLeft === 0) return setError("This code has expired. Request a new one.");
     if (code.length < OTP_LENGTH) return setError("Enter the full 6-digit code.");
-
     setBusy(true);
     try {
       await onVerified(code);
@@ -372,7 +493,6 @@ function OtpStep({ email, onBack, onVerified, onResend }) {
       setBusy(false);
     }
   };
-
   return (
     <AuthShell onBack={onBack}>
       <Heading title="Enter Verification Code">Enter the 6-digit code sent to your email.</Heading>
@@ -383,7 +503,6 @@ function OtpStep({ email, onBack, onVerified, onResend }) {
           <Mail className="h-3.5 w-3.5 text-[#7a5516]" /> {maskEmail(email)}
         </span>
       </p>
-
       <form onSubmit={submit} noValidate className="mt-9">
         <div
           className={`flex items-center gap-2 rounded-lg ${INPUT_BG} px-3.5 py-2.5 text-[13px] font-medium text-slate-700`}
@@ -397,7 +516,6 @@ function OtpStep({ email, onBack, onVerified, onResend }) {
             </span>
           </span>
         </div>
-
         <div className="mt-6 flex justify-between gap-2" onPaste={onPaste}>
           {digits.map((d, i) => (
             <input
@@ -423,12 +541,10 @@ function OtpStep({ email, onBack, onVerified, onResend }) {
         >
           {error || "Enter 6-digit code"}
         </p>
-
         <PrimaryButton className="mt-6" loading={busy}>
           {busy ? "Verifying…" : <>Verify Code <ArrowRight className="h-4 w-4" /></>}
         </PrimaryButton>
       </form>
-
       <p className={`mt-6 text-center text-sm ${MUTED}`}>
         Didn't get a code?{" "}
         <button
@@ -443,14 +559,12 @@ function OtpStep({ email, onBack, onVerified, onResend }) {
     </AuthShell>
   );
 }
-
 function ResetStep({ onBack, onSubmit }) {
   const [pw, setPw] = useState("");
   const [confirm, setConfirm] = useState("");
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
   const [busy, setBusy] = useState(false);
-
   const submit = async (e) => {
     e.preventDefault();
     setFormError("");
@@ -460,7 +574,6 @@ function ResetStep({ onBack, onSubmit }) {
     if (confirm !== pw) next.confirm = "Passwords do not match.";
     setErrors(next);
     if (Object.keys(next).length > 0) return;
-
     setBusy(true);
     try {
       await onSubmit(pw);
@@ -470,7 +583,6 @@ function ResetStep({ onBack, onSubmit }) {
       setBusy(false);
     }
   };
-
   return (
     <AuthShell onBack={onBack}>
       <Heading title="Create New Password">Create a new password for your account.</Heading>
@@ -500,15 +612,12 @@ function ResetStep({ onBack, onSubmit }) {
     </AuthShell>
   );
 }
-
 /* ------------------------------------------------------------------ */
 /*  Modals                                                             */
 /* ------------------------------------------------------------------ */
-
 /* ------------------------------------------------------------------ */
 /*  Page / flow controller                                             */
 /* ------------------------------------------------------------------ */
-
 /**
  * Flow: login → forgot → (check-email modal) → otp → reset → (success modal) → login
  * Pressing Back on the reset step opens the "Cancel Password Change?" modal.
@@ -520,47 +629,55 @@ function ResetStep({ onBack, onSubmit }) {
  *                                            ROLE_HOME[role] (admin → /admin, etc.)
  */
 export default function AuthPage({ onLoginSuccess }) {
-  const [step, setStep] = useState("login"); // login | forgot | otp | reset
+  const [step, setStep] = useState("login"); // login | signup | forgot | otp | reset
   const [modal, setModal] = useState(null); // checkEmail | cancel | success | null
   const [email, setEmail] = useState("");
-
   const toLogin = useCallback(() => {
     setModal(null);
     setStep("login");
   }, []);
-
-  const handleLogin = async (credentials) => {
-    const result = await signIn(credentials);
-    if (onLoginSuccess) onLoginSuccess(result);
-    else window.location.assign(ROLE_HOME[result.role] ?? "/");
-  };
-
+const handleLogin = async (credentials) => {
+  const result = await signIn(credentials);
+  console.log("Authenticated user:", result.user?.email);
+  console.log("Authenticated role:", result.role);
+  const destination = ROLE_HOME[result.role];
+  if (!destination) {
+    throw new Error(`Invalid user role: ${result.role}`);
+  }
+  console.log("Redirecting to:", destination);
+  window.location.replace(destination);
+};
   const handleSendCode = async (address) => {
     await requestPasswordReset(address);
     setEmail(address);
     setModal("checkEmail");
   };
-
   const handleVerifyCode = async (code) => {
     await verifyRecoveryOtp(email, code);
     setStep("reset");
   };
-
   const handleNewPassword = async (password) => {
     await updatePassword(password);
     await signOut(); // the recovery session must not stay logged in; user logs in with the new password
     setModal("success");
   };
-
   const handleCancelReset = async () => {
     await signOut(); // drop the temporary recovery session
     toLogin();
   };
-
   return (
     <>
-      {step === "login" && <LoginStep onForgot={() => setStep("forgot")} onLogin={handleLogin} />}
-
+      {step === "login" && (
+        <LoginStep
+          onForgot={() => setStep("forgot")}
+          onSignup={() => setStep("signup")}
+          onBackToLanding={() => window.location.assign("/")}
+          onLogin={handleLogin}
+        />
+      )}
+      {step === "signup" && (
+        <SignupStep onBackToLogin={() => setStep("login")} />
+      )}
       {step === "forgot" && (
         <ForgotStep
           email={email}
@@ -569,7 +686,6 @@ export default function AuthPage({ onLoginSuccess }) {
           onSend={handleSendCode}
         />
       )}
-
       {step === "otp" && (
         <OtpStep
           email={email}
@@ -578,11 +694,9 @@ export default function AuthPage({ onLoginSuccess }) {
           onResend={() => requestPasswordReset(email)}
         />
       )}
-
       {step === "reset" && (
         <ResetStep onBack={() => setModal("cancel")} onSubmit={handleNewPassword} />
       )}
-
       {modal === "checkEmail" && (
         <CheckEmailModal
           email={email}
