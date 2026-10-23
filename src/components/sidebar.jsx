@@ -76,8 +76,8 @@ function NavItem({ icon: Icon, label, link, ...iconProps }) {
 				className={({ isActive }) =>
 					`flex items-center gap-3 border-l-4 p-4 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#4b6b95] ${
 						isActive
-							? "border-[#b3832c] bg-[#f5e6cb] font-semibold text-[#684d24] hover:bg-[#f5e6cb]"
-							: "border-transparent text-[#574d40] hover:bg-[#e3effe]"
+							? "border-[#b3832c] bg-[#d9a54c] font-semibold text-[#684d24] hover:bg-[#f5e6cb]"
+							: "border-transparent text-[#574d40] hover:bg-[#f5e6cb]"
 					}`
 				}
 			>
@@ -101,18 +101,15 @@ function SideBar({ links }) {
 export const AdminSideBar = () => <SideBar links={ADMIN_LINKS} />;
 export const StaffSideBar = () => <SideBar links={STAFF_LINKS} />;
 
-/* ---------- customer (route-based, blue active state) ---------- */
 
 function CustomerNavItem({ icon: Icon, label, link, active }) {
 	return (
 		<li>
-			<Link
-				to={link}
-				aria-current={active ? "page" : undefined}
+			<Link to={link} aria-current={active ? "page" : undefined}
 				className={`flex w-full items-center gap-3 p-5 text-left ${
-					active ? "bg-[#a9c9f2]" : "hover:bg-[#e3effe]"
-				}`}
-			>
+					active ? "bg-[#D9A54c] border-l-4 font-semibold border-[#b3832c]" : "hover:bg-[#f5e6cb]"
+				}`}>
+
 				<Icon className="shrink-0" />
 				<span>{label}</span>
 			</Link>
