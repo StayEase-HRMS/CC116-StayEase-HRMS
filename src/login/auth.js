@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient";
+import { supabase } from "../api/supabaseClient";
 
 /** Where each role lands after logging in. Adjust to your routes. */
 export const ROLE_HOME = {
