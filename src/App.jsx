@@ -7,6 +7,7 @@ import LandingPage from "./LandingPage";
 import CustomerChatSupport from "./customer/CustomerChatSupport";
 import CustomerRooms from "./customer/CustomerRooms";
 import CustomerPage from "./customer/CustomerPage";
+import AuthPage from "./login/AuthPage";
 
 function App() {
   return (
@@ -16,6 +17,8 @@ function App() {
 
         {/*for testing, remove this later*/}
         <Route path="/customer" element={<CustomerPage />} /> 
+
+        <Route path="/login" element={<AuthPage />} /> 
 
         {/* Customer side routing*/}
         <Route path="/my-reservation" element={<CustomerPage />} />
