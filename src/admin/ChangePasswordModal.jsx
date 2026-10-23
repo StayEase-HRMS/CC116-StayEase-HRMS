@@ -15,7 +15,7 @@ function PasswordField({ label, name, autoComplete }) {
   );
 }
 
-export default function ChangePasswordModal({ onClose, onSuccess }) {
+export default function ChangePasswordModal({ onClose }) {
   const dialog = useRef(null);
   const [error, setError] = useState("");
 
@@ -37,9 +37,7 @@ export default function ChangePasswordModal({ onClose, onSuccess }) {
     if (next === current) return setError("New password must be different from the current one.");
     if (next !== confirm) return setError("New password and confirmation do not match.");
 
-    // TODO: call your backend here to verify `current` and save `next`.
-    onSuccess();
-    onClose();
+    setError('Password changes are unavailable in this in-memory demo. No password was changed.');
   }
 
   return (

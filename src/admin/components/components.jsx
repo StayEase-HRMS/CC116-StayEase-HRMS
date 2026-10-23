@@ -1,24 +1,14 @@
+import { Link, useLocation } from 'react-router-dom';
+import { useManagement } from '../../state/management-store';
+import { todayInManila } from '../../state/management-model';
 import { useState } from 'react';
 import Pagination from './Pagination';
-const reservations = [
-  { guest: "Dayapera", room: "405 Deluxe", checkIn: "Sept 22, 2026", checkOut: "Sept 25, 2026", status: "Checked-in" },
-  { guest: "Puerta", room: "205 Standard", checkIn: "Sept 22, 2026", checkOut: "Sept 25, 2026", status: "Pending" },
-  { guest: "Zantua", room: "103 Family", checkIn: "Sept 22, 2026", checkOut: "Sept 25, 2026", status: "Checked-in" },
-  { guest: "Fabi", room: "405 Deluxe", checkIn: "Sept 22, 2026", checkOut: "Sept 25, 2026", status: "Checked-in" },
-  { guest: "Denina", room: "303 Suite", checkIn: "Sept 22, 2026", checkOut: "Sept 22, 2026", status: "Checked-out" },
-]
-
 const statusStyles = {
   "Checked-in": "bg-green-200",
   "Pending": "bg-blue-400 text-white",
+  "Confirmed": "bg-blue-400 text-white",
   "Checked-out": "bg-yellow-100",
 }
-
-const roomStatus = [
-  { label: "Pending", value: 5, color: "#7eb2ff" },
-  { label: "Available", value: 5, color: "#b5f0d0" },
-  { label: "Occupied", value: 40, color: "#d4a55c" },
-]
 
 function StatusBadge({ status }) {
   return (
@@ -29,12 +19,17 @@ function StatusBadge({ status }) {
 }
 
 function ReservationsTable() {
-  const [page, setPage] = useState(1);
+  const state = useManagement();
+  const { pathname } = useLocation();
+  const today = todayInManila();
+  const reservations = state.reservations.filter(r => !['Cancelled', 'Declined'].includes(r.status) && (r.status === 'Checked-out' ? (r.departedOn ?? r.checkOut) === today : r.checkIn <= today && (r.status === 'Checked-in' || today < r.checkOut))).map(r => ({ ...r, guest: r.name, room: state.rooms.find(room => room.id === r.roomId)?.name ?? r.roomId }));
+  const [requestedPage, setPage] = useState(1);
+  const page = Math.min(requestedPage, Math.max(1, Math.ceil(reservations.length / 7)));
   return (
     <div className="dashboard-reservations min-w-0 rounded-xl bg-white">
       <div className="flex items-center justify-between px-2">
         <h2 className="text-base font-bold">Today's Reservations</h2>
-        <a href="#" className="text-xs text-blue-600 mr-6">View all</a>
+        <Link to={pathname.startsWith('/staff') ? '/staff/reservations' : '/admin/reservations'} className="text-xs text-blue-600 mr-6">View all</Link>
       </div>
 
       <div className="mt-3 overflow-x-auto">
@@ -50,7 +45,7 @@ function ReservationsTable() {
           </thead>
           <tbody>
             {reservations.slice((page - 1) * 7, page * 7).map((r) => (
-              <tr key={r.guest}>
+              <tr key={r.id}>
                 <td className="py-3">{r.guest}</td>
                 <td className="py-3">{r.room}</td>
                 <td className="py-3">{r.checkIn}</td>
@@ -67,7 +62,7 @@ function ReservationsTable() {
 }
 
 function PieChart({ data, size = 220 }) {
-  const total = data.reduce((sum, d) => sum + d.value, 0)
+  const total = data.reduce((sum, d) => sum + d.value, 0) || 1
   const r = size / 2
   // Calculate each slice from its preceding values without mutating render state.
 
@@ -89,14 +84,16 @@ function PieChart({ data, size = 220 }) {
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
       {slices.map((s) => (
-        <path key={s.label} d={s.path} fill={s.color} stroke="white" strokeWidth="1" />
+        s.value === total ? <circle key={s.label} cx={r} cy={r} r={r} fill={s.color} /> : s.value > 0 && <path key={s.label} d={s.path} fill={s.color} stroke="white" strokeWidth="1" />
       ))}
     </svg>
   )
 }
 
 function RoomStatusOverview() {
-  const total = roomStatus.reduce((sum, d) => sum + d.value, 0)
+  const { rooms } = useManagement();
+  const roomStatus = [['Available', '#b5f0d0'], ['Occupied', '#d4a55c'], ['Needs Cleaning', '#7eb2ff'], ['Vacant', '#dce4ef'], ['Maintenance', '#fca5a5']].map(([label, color]) => ({ label, color, value: rooms.filter(r => r.status === label).length }));
+  const total = roomStatus.reduce((sum, d) => sum + d.value, 0) || 1
 
   return (
     <div className="dashboard-room-status min-w-0 rounded-xl bg-white">

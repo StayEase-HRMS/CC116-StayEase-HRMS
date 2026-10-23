@@ -1,57 +1,48 @@
+import { useManagement } from '../state/management-store';
+import { reportRecords, todayInManila, validDate } from '../state/management-model';
 import { useState } from 'react';
 import { BedDouble, CalendarDays, ChevronDown, KeyRound, Users } from 'lucide-react';
 import { control, panel } from './ManagementUI';
 
 const DAY = 86400000;
-const bookingPattern = [26, 19, 22, 17, 27, 24, 21, 25, 28, 18, 22, 30, 28, 23, 30, 21, 17, 27, 26, 26, 31, 39, 34, 17, 24, 28, 32, 38, 33, 18];
 const iso = timestamp => new Date(timestamp).toISOString().slice(0, 10);
 const dateLabel = value => new Date(`${value}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-
-// Deterministic daily demo metrics; summaries and chart share the same records.
-function recordsBetween(start, end) {
-  const records = [];
-  for (let time = Date.parse(start); time <= Date.parse(end); time += DAY) {
-    const day = new Date(time).getUTCDate();
-    const bookings = bookingPattern[(day - 1) % bookingPattern.length];
-    records.push({ date: iso(time), bookings, guests: Math.round(bookings * 1.7), pending: Math.round(bookings * 0.15), occupied: day === 30 ? 18 : 35 + day % 11 });
-  }
-  return records;
-}
 
 function BookingsChart({ records }) {
   const width = 1100;
   const height = 235;
-  const maximum = Math.max(40, ...records.map(r => r.bookings));
+  const maximum = Math.max(4, ...records.map(r => r.bookings));
   const step = width / records.length;
   const barWidth = Math.max(1, Math.min(12, step * 0.6));
   const interval = Math.max(1, Math.ceil(records.length / 7));
   return <div className="overflow-x-auto pt-5"><svg className="h-[280px] w-full min-w-[560px]" viewBox="0 0 1200 300" role="img" aria-labelledby="bookings-chart-title bookings-chart-description">
     <title id="bookings-chart-title">Bookings per Period</title>
-    <desc id="bookings-chart-description">Daily mock bookings from {dateLabel(records[0].date)} to {dateLabel(records.at(-1).date)}. {records.reduce((sum, r) => sum + r.bookings, 0)} total bookings. Each bar includes its date and count.</desc>
-    {[0, 10, 20, 30, 40].map(value => <g key={value}><line x1="55" x2="1170" y1={250 - value / maximum * height} y2={250 - value / maximum * height} stroke="#edf2f7" strokeDasharray="5 5" /><text x="42" y={255 - value / maximum * height} textAnchor="end" fill="#94a3b8" fontSize="17">{value}</text></g>)}
+    <desc id="bookings-chart-description">Daily bookings from {dateLabel(records[0].date)} to {dateLabel(records.at(-1).date)}. {records.reduce((sum, r) => sum + r.bookings, 0)} total bookings. Each bar includes its date and count.</desc>
+    {[0, 1, 2, 3, 4].map(tick => tick * maximum / 4).map(value => <g key={value}><line x1="55" x2="1170" y1={250 - value / maximum * height} y2={250 - value / maximum * height} stroke="#edf2f7" strokeDasharray="5 5" /><text x="42" y={255 - value / maximum * height} textAnchor="end" fill="#94a3b8" fontSize="17">{Number(value.toFixed(1))}</text></g>)}
     {records.map((record, index) => <g key={record.date}><rect x={55 + step * (index + 0.5) - barWidth / 2} y={250 - record.bookings / maximum * height} width={barWidth} height={record.bookings / maximum * height} rx="2" fill={record.bookings >= 32 ? '#b97b25' : '#cda358'}><title>{dateLabel(record.date)}: {record.bookings} bookings</title></rect>{(index === 0 || index === records.length - 1 || (index + 1) % interval === 0 && index < records.length - 2) && <text x={55 + step * (index + 0.5)} y="279" textAnchor="middle" fill="#94a3b8" fontSize="16">{dateLabel(record.date)}</text>}</g>)}
   </svg></div>;
 }
 
 export default function Reports() {
-  const [start, setStart] = useState('2026-09-01');
-  const [end, setEnd] = useState('2026-09-30');
+  const state = useManagement();
+  const [start, setStart] = useState(() => todayInManila().slice(0, 7) + '-01');
+  const [end, setEnd] = useState(todayInManila);
   const [preset, setPreset] = useState('');
   const [expanded, setExpanded] = useState(true);
   const days = (Date.parse(end) - Date.parse(start)) / DAY + 1;
-  const error = !start || !end ? 'Choose a start and end date.' : days <= 0 ? 'End date must be on or after start date.' : days > 366 ? 'Choose a date range of up to 366 days.' : '';
-  const records = error ? [] : recordsBetween(start, end);
+  const error = !validDate(start) || !validDate(end) ? 'Choose a valid start and end date.' : days <= 0 ? 'End date must be on or after start date.' : days > 366 ? 'Choose a date range of up to 366 days.' : '';
+  const records = error ? [] : reportRecords(state, start, end);
   const totals = records.reduce((sum, r) => ({ bookings: sum.bookings + r.bookings, guests: sum.guests + r.guests, pending: sum.pending + r.pending, occupied: sum.occupied + r.occupied }), { bookings: 0, guests: 0, pending: 0, occupied: 0 });
-  const occupancy = records.length ? Math.round(totals.occupied / (records.length * 50) * 100) : 0;
-  const previousEnd = iso(Date.parse(start || '2026-09-01') - DAY);
-  const previous = error ? [] : recordsBetween(iso(Date.parse(start) - days * DAY), previousEnd);
-  const previousOccupancy = previous.length ? previous.reduce((sum, r) => sum + r.occupied, 0) / (previous.length * 50) * 100 : 0;
+  const occupancy = records.length && state.rooms.length ? Math.round(totals.occupied / (records.length * state.rooms.length) * 100) : 0;
+  const previousEnd = error ? '' : iso(Date.parse(start) - DAY);
+  const previous = error ? [] : reportRecords(state, iso(Date.parse(start) - days * DAY), previousEnd);
+  const previousOccupancy = previous.length && state.rooms.length ? previous.reduce((sum, r) => sum + r.occupied, 0) / (previous.length * state.rooms.length) * 100 : 0;
   const difference = occupancy - previousOccupancy;
   const stats = [
     { label: 'Occupancy Rate', value: `${occupancy}%`, detail: `${difference >= 0 ? '+' : ''}${difference.toFixed(1)} pp`, title: 'Change versus the preceding period', icon: BedDouble, tone: 'bg-emerald-50 text-emerald-600' },
     { label: 'Total Bookings', value: totals.bookings, detail: `${totals.pending} pending`, icon: CalendarDays, tone: 'bg-blue-50 text-blue-600' },
     { label: 'Total Guests', value: totals.guests, detail: `Avg ${totals.bookings ? (totals.guests / totals.bookings).toFixed(1) : '0'} / booking`, icon: Users, tone: 'bg-amber-50 text-amber-600' },
-    { label: 'Available Rooms', value: records.length ? 50 - records.at(-1).occupied : 0, detail: '/ 50 total', title: 'Available rooms on the final date', icon: KeyRound, tone: 'bg-emerald-50 text-emerald-600' },
+    { label: 'Available Rooms', value: records.length ? records.at(-1).available : 0, detail: `/ ${state.rooms.length} total`, title: 'Current readiness for today; other dates estimate inventory less occupied rooms and maintenance', icon: KeyRound, tone: 'bg-emerald-50 text-emerald-600' },
   ];
   function choosePreset(value) {
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());

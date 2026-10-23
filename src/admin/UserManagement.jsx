@@ -1,25 +1,23 @@
+import { useTableSort } from '../state/useTableSort';
+import SortHeader from './components/SortHeader';
+import { useManagementCollection } from '../state/management-store';
 import Pagination from './components/Pagination';
 import { useState } from 'react';
 import AccountModal from './AccountModal';
 import { Users, Briefcase, BadgeCheck, Ban, Plus, Search, RotateCcw, Eye, Pencil } from 'lucide-react';
 
-const initialUsers = [
-  { id: 'G001', name: 'Elena Rostova', email: 'elena.rostova@gmail.com', role: 'Guest', status: 'Active', created: '2023-11-04' },
-  { id: 'S001', name: 'David Chen', email: 'david.chen@stayease.com', role: 'Staff', status: 'Active', created: '2023-09-18' },
-  { id: 'G002', name: 'Mark Denina', email: 'mark.denina@example.com', role: 'Guest', status: 'Active', created: '2023-11-10' },
-  { id: 'G003', name: 'Josh Dayapera', email: 'josh.dayapera@example.com', role: 'Guest', status: 'Suspended', created: '2023-11-10' },
-];
 const dateLabel = value => new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
 
 export default function UserManagement() {
-  const [accounts, setAccounts] = useState(initialUsers);
+  const { sort, toggleSort, sortRows } = useTableSort('name');
+  const [accounts, setAccounts] = useManagementCollection('accounts');
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('All Roles');
   const [status, setStatus] = useState('All Statuses');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const [mode, setMode] = useState('view');
-  const filtered = accounts.filter(a => [a.name, a.id, a.email].join(' ').toLowerCase().includes(search.toLowerCase()) && (role === 'All Roles' || a.role === role) && (status === 'All Statuses' || a.status === status));
+  const filtered = sortRows(accounts.filter(a => [a.name, a.id, a.email].join(' ').toLowerCase().includes(search.toLowerCase()) && (role === 'All Roles' || a.role === role) && (status === 'All Statuses' || a.status === status)));
   const pages = Math.max(1, Math.ceil(filtered.length / 7));
   const currentPage = Math.min(page, pages);
   const visible = filtered.slice((currentPage - 1) * 7, currentPage * 7);
@@ -33,7 +31,7 @@ export default function UserManagement() {
     } else {
       const today = new Date();
       const created = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, '0'), String(today.getDate()).padStart(2, '0')].join('-');
-      setAccounts([...accounts, { ...values, id: 'S-' + crypto.randomUUID(), role: 'Staff', status: 'Active', created }]);
+      setAccounts([...accounts, { ...values, id: 'S-' + crypto.randomUUID(), status: 'Active', created }]);
       reset();
     }
     setSelected(null);
@@ -46,7 +44,7 @@ export default function UserManagement() {
     ].map(([label, value, Icon]) => <div className="admin-stat" key={label}><div><span>{label}</span><Icon size={20} /></div><strong>{value}</strong></div>)}</div>
     <section className="admin-accounts" aria-label="User accounts">
       <div className="admin-filters"><label className="admin-search"><Search size={20} /><input aria-label="Search accounts" placeholder="Search by name, ID or email..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} /></label><select aria-label="Filter by role" value={role} onChange={e => { setRole(e.target.value); setPage(1); }}>{['All Roles', 'Guest', 'Staff'].map(v => <option key={v}>{v}</option>)}</select><select aria-label="Filter by status" value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}>{['All Statuses', 'Active', 'Suspended'].map(v => <option key={v}>{v}</option>)}</select><button className="admin-icon-button" aria-label="Reset filters" onClick={reset}><RotateCcw size={19} /></button></div>
-      <div className="admin-table-scroll"><table className="admin-user-table management-table"><thead><tr>{['Account', 'Email', 'Role', 'Status', 'Date created', 'Actions'].map(label => <th key={label}>{label}</th>)}</tr></thead><tbody>{visible.map(a => <tr key={a.id}><td><strong>{a.name}</strong></td><td>{a.email}</td><td><span className={'admin-badge ' + a.role.toLowerCase()}>{a.role}</span></td><td><span className={'admin-badge ' + a.status.toLowerCase()}>• {a.status}</span></td><td>{dateLabel(a.created)}</td><td><button className="admin-icon-button" aria-label={'View ' + a.name} onClick={() => { setMode('view'); setSelected(a); }}><Eye size={18} /></button><button className="admin-icon-button" aria-label={'Edit ' + a.name} onClick={() => { setMode('edit'); setSelected(a); }}><Pencil size={17} /></button></td></tr>)}</tbody></table>{!visible.length && <p className="admin-empty">No accounts match your search. Try changing the filters.</p>}</div>
+      <div className="admin-table-scroll"><table className="admin-user-table management-table"><thead><tr>{['Account', 'Email', 'Role', 'Status', 'Date created', 'Actions'].map((label, index) => ['name','email','role','status','created'][index] ? <SortHeader key={label} className="" field={['name','email','role','status','created'][index]} sort={sort} onSort={toggleSort}>{label}</SortHeader> : <th key={label} className="">{label}</th>)}</tr></thead><tbody>{visible.map(a => <tr key={a.id}><td><strong>{a.name}</strong></td><td>{a.email}</td><td><span className={'admin-badge ' + a.role.toLowerCase()}>{a.role}</span></td><td><span className={'admin-badge ' + a.status.toLowerCase()}>• {a.status}</span></td><td>{dateLabel(a.created)}</td><td><button className="admin-icon-button" aria-label={'View ' + a.name} onClick={() => { setMode('view'); setSelected(a); }}><Eye size={18} /></button><button className="admin-icon-button" aria-label={'Edit ' + a.name} onClick={() => { setMode('edit'); setSelected(a); }}><Pencil size={17} /></button></td></tr>)}</tbody></table>{!visible.length && <p className="admin-empty">No accounts match your search. Try changing the filters.</p>}</div>
       <Pagination page={currentPage} total={filtered.length} pageSize={7} onChange={setPage} noun="accounts" />
     </section>
     {selected && <AccountModal key={mode + (selected.id ?? 'new')} mode={mode} account={selected === 'add' ? null : selected} onClose={() => setSelected(null)} onSave={saveAccount} onEdit={() => setMode('edit')} onToggleStatus={() => {

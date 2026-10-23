@@ -1,3 +1,5 @@
+import { useManagement } from '../state/management-store';
+import { todayInManila } from '../state/management-model';
 import { useLocation } from "react-router-dom";
 import { BedDouble, CalendarDays, DoorOpen, KeyRound, Users } from "lucide-react";
 import { AdminSideBar, StaffSideBar } from "../components/sidebar";
@@ -22,21 +24,6 @@ const STAT_ICON_TONES = {
   amber: "bg-[#fff4df] text-[#956719]",
   red: "bg-[#fff0f1] text-[#bd3343]",
 };
-
-const STATS_DATA = [
-  { label: "Total rooms", value: 50, icon: BedDouble, tone: "default" },
-  { label: "Occupied rooms", value: 40, icon: Users, tone: "default" },
-  { label: "Available rooms", value: 5, icon: KeyRound, tone: "amber" },
-  { label: "Pending rooms", value: 5, icon: CalendarDays, tone: "red" },
-  { label: "Check-outs", value: 1, icon: DoorOpen, tone: "default" },
-];
-
-const ROOM_TYPES = [
-  { name: "Standard", occupied: 16, available: 2, pending: 2 },
-  { name: "Deluxe", occupied: 12, available: 1, pending: 2 },
-  { name: "Executive Suite", occupied: 6, available: 1, pending: 0 },
-  { name: "Family", occupied: 6, available: 1, pending: 1 },
-];
 
 /* ---------- helpers ---------- */
 
@@ -116,7 +103,7 @@ function StatCard({ label, value, icon: Icon, tone }) {
 
 function RoomTypeCard({ name, occupied, available, pending }) {
   const totalRooms = occupied + available + pending;
-  const occupancyPercentage = (occupied / totalRooms) * 100;
+  const occupancyPercentage = totalRooms ? (occupied / totalRooms) * 100 : 0;
 
   return (
     <article className="rounded-xl border border-[#e5e9ef] p-4.5">
@@ -137,11 +124,26 @@ function RoomTypeCard({ name, occupied, available, pending }) {
 }
 
 function DashboardOverview() {
+  const { rooms, reservations } = useManagement();
+  const today = todayInManila();
+  const stats = [
+    { label: 'Total rooms', value: rooms.length, icon: BedDouble, tone: 'default' },
+    { label: 'Occupied rooms', value: rooms.filter(r => r.status === 'Occupied').length, icon: Users, tone: 'default' },
+    { label: 'Available rooms', value: rooms.filter(r => r.status === 'Available').length, icon: KeyRound, tone: 'amber' },
+    { label: 'Pending rooms', value: new Set(reservations.filter(r => r.status === 'Pending').map(r => r.roomId)).size, icon: CalendarDays, tone: 'red' },
+    { label: 'Check-outs', value: reservations.filter(r => r.status === 'Checked-out' && (r.departedOn ?? r.checkOut) === today).length, icon: DoorOpen, tone: 'default' },
+  ];
+  const roomTypes = ['Standard Room', 'Deluxe Room', 'Executive Suite', 'Family Room'].map(name => {
+    const matching = rooms.filter(r => r.category === name);
+    const occupied = matching.filter(r => r.status === 'Occupied').length;
+    const available = matching.filter(r => r.status === 'Available').length;
+    return { name, occupied, available, pending: matching.length - occupied - available };
+  });
   return (
     <>
 
       <div className="grid grid-cols-2 gap-4.5 min-[901px]:grid-cols-3 min-[1201px]:grid-cols-5">
-        {STATS_DATA.map((stat) => (
+        {stats.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}
       </div>
@@ -150,7 +152,7 @@ function DashboardOverview() {
         <SectionHeading title="Room availability" note="By room type" />
 
         <div className="mt-4.5 grid grid-cols-1 gap-4 min-[601px]:grid-cols-2 min-[1201px]:grid-cols-4">
-          {ROOM_TYPES.map((room) => (
+          {roomTypes.map((room) => (
             <RoomTypeCard key={room.name} {...room} />
           ))}
         </div>

@@ -1,36 +1,10 @@
+import { useManagementCollection } from '../state/management-store';
 import { useEffect, useState } from "react";
 import { Clock, KeyRound, Mail, MapPin, Pencil, Phone, Users } from "lucide-react";
 import EditProfileModal from "./EditProfileModal";
 import ChangePasswordModal from "./ChangePasswordModal";
 
 /* ---------- placeholder data: replace with your logged-in user / API data ---------- */
-
-const PROFILE = {
-  name: "Joshybels",
-  employeeId: "SE-6821",
-  title: "Senior Front Desk & Guest Relations Specialist",
-  shift: "Morning (07:00 - 15:30)",
-  email: "joshybels@stayease.com",
-  phone: "+63 912-345-6789",
-  avatar: null,
-  fullName: "Joshybels A. Vance",
-  preferredName: "Joshybels",
-  department: "Front Desk Operations & Concierge",
-  supervisor: "Helena Brandt (GM)",
-  languages: "Tagalog (Native), English (Native)",
-  joined: "March 14, 2022 (2+ Years)",
-  workingDays: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-  rfid: "Master Staff RFID #4409",
-  permittedFloors: "Floors 1 – 6, Service Level & Roof",
-  pmsLevel: "Supervisor (Tier 2)",
-  terminal: "Terminal Front-Desk-02",
-  emergency: {
-    name: "Sarah Vance",
-    relation: "Spouse",
-    phone: "+63 912-987-6543",
-    address: "123 street, Caloocan City, Metro Manila, Philippines",
-  },
-};
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -59,9 +33,9 @@ function DetailRow({ label, value }) {
 
 /* ---------- page ---------- */
 
-export default function AccountManagement({ role = "admin", user: initialUser = PROFILE }) {
-  // Local copy so edits show immediately (they reset on refresh until you connect a backend).
-  const [user, setUser] = useState(initialUser);
+export default function AccountManagement({ role = "admin", user: initialUser }) {
+  const [storedUser, setUser] = useManagementCollection(role === 'staff' ? 'staffProfile' : 'adminProfile');
+  const user = storedUser ?? initialUser;
   const [showEdit, setShowEdit] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [notice, setNotice] = useState("");
@@ -116,7 +90,6 @@ export default function AccountManagement({ role = "admin", user: initialUser = 
       {showPassword && (
         <ChangePasswordModal
           onClose={() => setShowPassword(false)}
-          onSuccess={() => setNotice("Password updated.")}
         />
       )}
 

@@ -1,7 +1,7 @@
 import Pagination from './components/Pagination';
 import { useEffect, useRef, useState } from 'react';
 import { Plus, Search, RotateCcw, X, ImagePlus, ChevronRight, BedDouble, Check } from 'lucide-react';
-import roomPhoto from '../assets/room_1.jpg';
+import { useManagementCollection, managementActions } from '../state/management-store';
 import './rooms.css';
 
 const categories = ['Standard Room', 'Deluxe Room', 'Executive Suite', 'Family Room'];
@@ -13,16 +13,6 @@ const statusDescriptions = {
   Maintenance: 'Out of order due to plumbing, HVAC, or repair work',
 };
 const amenities = ['Wi-Fi', 'Smart TV', 'Air Conditioning', 'Mini Bar', 'Balcony View', 'Coffee Maker'];
-const initialRooms = [
-  ['204', 'Deluxe Room', 3500, 'Available'], ['101', 'Standard Room', 2400, 'Occupied'],
-  ['305', 'Executive Suite', 5800, 'Available'], ['108', 'Standard Room', 2400, 'Needs Cleaning'],
-  ['402', 'Family Room', 4600, 'Vacant'], ['210', 'Deluxe Room', 3500, 'Maintenance'],
-].map(([number, category, price, status]) => ({
-  id: number, name: 'Room ' + number, category, price, status,
-  amenities: ['Wi-Fi', 'Smart TV', 'Air Conditioning'], photos: [roomPhoto],
-  description: 'A comfortable ' + category.toLowerCase() + ' with a welcoming interior and space to relax.',
-  floor: number[0] + 'F', sanitized: 'Not recorded', note: '',
-}));
 const currency = value => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 2 }).format(value);
 const statusClass = status => status.toLowerCase().replaceAll(' ', '-');
 const roomKey = name => name.trim().toLowerCase().replace(/^room\s*/, '').replace(/\s+/g, ' ');
@@ -109,16 +99,18 @@ function RoomView({ room, onClose, onEdit, onStatus, onRemove, readOnly }) {
 }
 
 function StatusForm({ room, onSave, onClose }) {
+  const [error, setError] = useState('');
   return <Modal title="Update Operational Status" subtitle={'Change status for ' + room.name + ' (' + room.category + ')'} onClose={onClose} compact>
-    <form onSubmit={event => { event.preventDefault(); const data = new FormData(event.currentTarget); onSave(data.get('status'), data.get('note').trim()); }}>
+    <form onSubmit={event => { event.preventDefault(); const data = new FormData(event.currentTarget); setError(onSave(data.get('status'), data.get('note').trim()) || ''); }}>
       <div className="room-modal-body"><div className="room-status-options">{Object.entries(statusDescriptions).map(([status, description]) => <label className={statusClass(status)} key={status}><input type="radio" name="status" value={status} defaultChecked={room.status === status} required /><span><strong>{status}</strong><small>{description}</small></span><span className="room-status-dot" /></label>)}</div><label className="room-status-note">Status Note (Optional):<input name="note" placeholder="e.g., Linens refreshed, AC inspected OK" maxLength={500} defaultValue={room.note} /></label></div>
-      <footer><button type="button" className="account-secondary" onClick={onClose}>Cancel</button><button className="account-submit" type="submit">Save Status</button></footer>
+      {error && <p role="alert" className="room-error">{error}</p>}<footer><button type="button" className="account-secondary" onClick={onClose}>Cancel</button><button className="account-submit" type="submit">Save Status</button></footer>
     </form>
   </Modal>;
 }
 
 export default function RoomManagement({ readOnly = false }) {
-  const [rooms, setRooms] = useState(initialRooms);
+  const [rooms] = useManagementCollection('rooms');
+  const [notice, setNotice] = useState('');
   const [page, setPage] = useState(1);
   const pageSize = 9;
   const [search, setSearch] = useState('');
@@ -134,24 +126,26 @@ export default function RoomManagement({ readOnly = false }) {
   function save(values) {
     if (readOnly) return 'Staff access is view-only.';
     if (rooms.some(room => room.id !== selected?.id && roomKey(room.name) === roomKey(values.name))) return 'A room with this name or number already exists.';
-    if (selected) setRooms(rooms.map(room => room.id === selected.id ? { ...room, ...values } : room));
-    else {
-      setRooms([...rooms, { ...values, id: crypto.randomUUID(), floor: '', sanitized: 'Not recorded', note: '' }]);
+    const error = managementActions.saveRoom({ ...(selected ?? { id: crypto.randomUUID(), floor: '', sanitized: 'Not recorded', note: '' }), ...values });
+    if (error) return error;
+    setNotice(selected ? 'Room updated.' : 'Room added.');
+    if (!selected) {
       setSearch(''); setStatus('All'); setCategory('All Categories'); setPage(1);
     }
     close(); return null;
   }
   return <>
+    {notice && <p role="status" className="room-undo">{notice}</p>}
     {!readOnly && <div className="admin-toolbar"><button className="admin-primary" onClick={() => setModal({ mode: 'add' })}><Plus size={18} />Add Room</button></div>}
     <div className="room-filters"><label className="admin-search"><Search size={18} /><input aria-label="Search rooms" placeholder="Search room number or category..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} /></label><label>Status:<select value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}>{['All', ...Object.keys(statusDescriptions)].map(s => <option key={s}>{s}</option>)}</select></label><label>Category:<select value={category} onChange={e => { setCategory(e.target.value); setPage(1); }}>{['All Categories', ...categories].map(c => <option key={c}>{c}</option>)}</select></label><button className="admin-icon-button" aria-label="Reset room filters" onClick={() => { setSearch(''); setStatus('All'); setCategory('All Categories'); setPage(1); }}><RotateCcw size={18} /></button></div>
-    {removed && <div className="room-undo" role="status"><span>{removed.name} removed.</span><button onClick={() => { setRooms([...rooms, removed]); setRemoved(null); }}>Undo</button></div>}
+    {removed && <div className="room-undo" role="status"><span>{removed.name} removed.</span><button onClick={() => { const error = managementActions.saveRoom(removed); if (error) setNotice(error); else { setRemoved(null); setNotice('Room restored.'); } }}>Undo</button></div>}
     <section className="room-paged-section" aria-label="Room inventory"><div className="room-page-body"><div className="room-inventory">{visible.map(room => <article className="room-inventory-card" key={room.id}><div className="room-card-summary">{room.photos[0] ? <img src={room.photos[0]} alt={room.name} /> : <div className="room-no-photo"><BedDouble size={30} /></div>}<div><h2>{room.name}</h2><p>{room.category}</p><strong>{currency(room.price)}</strong><small> / night</small></div><StatusBadge status={room.status} /></div><footer><button aria-label={'View ' + room.name} onClick={() => setModal({ mode: 'view', id: room.id })}>View <ChevronRight size={14} /></button></footer></article>)}</div>
     {!visible.length && <p className="admin-empty">No rooms match your filters.</p>}
     </div><Pagination page={currentPage} total={filtered.length} pageSize={pageSize} onChange={setPage} noun="rooms" /></section>
     {!readOnly && (modal?.mode === 'add' || (modal?.mode === 'edit' && selected)) && <RoomForm key={modal.mode + (selected?.id ?? '')} room={selected} onSave={save} onClose={close} />}
     {modal?.mode === 'view' && selected && <RoomView readOnly={readOnly} room={selected} onClose={close} onEdit={() => setModal({ mode: 'edit', id: selected.id })} onStatus={() => setModal({ mode: 'status', id: selected.id })} onRemove={() => setModal({ mode: 'remove', id: selected.id })} />}
-    {!readOnly && modal?.mode === 'status' && selected && <StatusForm room={selected} onClose={() => setModal({ mode: 'view', id: selected.id })} onSave={(nextStatus, note) => { setRooms(rooms.map(room => room.id === selected.id ? { ...room, status: nextStatus, note } : room)); setModal({ mode: 'view', id: selected.id }); }} />}
-    {!readOnly && modal?.mode === 'remove' && selected && <Modal title={'Remove ' + selected.name + '?'} onClose={close} compact><div className="room-modal-body"><p>You can undo the removal from the room list.</p></div><footer><button className="account-secondary" onClick={() => setModal({ mode: 'view', id: selected.id })}>Cancel</button><button className="room-danger" onClick={() => { setRemoved(selected); setRooms(rooms.filter(room => room.id !== selected.id)); close(); }}>Remove Room</button></footer></Modal>}
+    {!readOnly && modal?.mode === 'status' && selected && <StatusForm room={selected} onClose={() => setModal({ mode: 'view', id: selected.id })} onSave={(nextStatus, note) => { const error = managementActions.saveRoom({ ...selected, status: nextStatus, note }); if (error) return error; setNotice('Room status updated.'); setModal({ mode: 'view', id: selected.id }); }} />}
+    {!readOnly && modal?.mode === 'remove' && selected && <Modal title={'Remove ' + selected.name + '?'} onClose={close} compact><div className="room-modal-body"><p>You can undo the removal from the room list.</p></div><footer><button className="account-secondary" onClick={() => setModal({ mode: 'view', id: selected.id })}>Cancel</button><button className="room-danger" onClick={() => { const error = managementActions.removeRoom(selected.id); if (error) { setNotice(error); close(); return; } setRemoved(selected); close(); }}>Remove Room</button></footer></Modal>}
   </>;
 }
 

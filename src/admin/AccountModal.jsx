@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { UserRoundPlus, X } from 'lucide-react';
 
 const properties = ['Main Resort', 'East Wing', 'Villas & Suites'];
-const staffRoles = ['Front Desk Staff', 'Property Manager', 'Housekeeping', 'Maintenance'];
+const staffRoles = ['Front Desk Staff', 'Property Manager', 'Housekeeping', 'Maintenance', 'Guest'];
 
 export default function AccountModal({ mode, account, onClose, onSave, onEdit, onToggleStatus }) {
   const dialog = useRef(null);
   const [error, setError] = useState('');
   const readOnly = mode === 'view';
-  const isStaff = !account || account.role === 'Staff';
+  const [systemRole, setSystemRole] = useState(account?.systemRole ?? (account?.role === 'Guest' ? 'Guest' : 'Front Desk Staff'));
+  const isStaff = systemRole !== 'Guest';
   const title = mode === 'add' ? 'Add New Staff Member' : mode === 'edit' ? 'Edit Account' : 'Account Details';
 
   useEffect(() => {
@@ -24,6 +25,7 @@ export default function AccountModal({ mode, account, onClose, onSave, onEdit, o
       name: data.get('name').trim(),
       email: data.get('email').trim(),
       systemRole: data.get('systemRole'),
+      role: data.get('systemRole') === 'Guest' ? 'Guest' : 'Staff',
       department: data.get('department').trim(),
       employeeId: data.get('employeeId').trim(),
       properties: data.getAll('properties'),
@@ -44,7 +46,7 @@ export default function AccountModal({ mode, account, onClose, onSave, onEdit, o
         <div className="account-form-grid">
           <label>Full Name {!readOnly && <span>*</span>}<input name="name" required maxLength={100} placeholder="e.g. Marcus Vance" defaultValue={account?.name ?? ''} readOnly={readOnly} /></label>
           <label>{isStaff ? 'Staff Email' : 'Email'} {!readOnly && <span>*</span>}<input name="email" type="email" required placeholder="m.vance@stayease.com" defaultValue={account?.email ?? ''} readOnly={readOnly} /></label>
-          <label>System Role {!readOnly && <span>*</span>}<select name="systemRole" required defaultValue={account?.systemRole ?? (isStaff ? 'Front Desk Staff' : 'Guest')} disabled={readOnly}>{(isStaff ? staffRoles : ['Guest']).map(role => <option key={role}>{role}</option>)}</select></label>
+          <label>System Role {!readOnly && <span>*</span>}<select name="systemRole" required value={systemRole} onChange={e => setSystemRole(e.target.value)} disabled={readOnly}>{staffRoles.filter(role => mode !== 'add' || role !== 'Guest').map(role => <option key={role}>{role}</option>)}</select></label>
           <div className="account-department"><span>Department &amp; Employee ID</span><div><input name="department" aria-label="Department" placeholder={isStaff ? 'Operations' : 'Not applicable'} defaultValue={account?.department ?? ''} readOnly={readOnly || !isStaff} maxLength={100} /><input name="employeeId" aria-label="Employee ID" placeholder={isStaff ? '#STF-025' : 'N/A'} defaultValue={account?.employeeId ?? ''} readOnly={readOnly || !isStaff} maxLength={40} /></div></div>
         </div>
         <fieldset className="account-properties" disabled={readOnly}><legend>Property Access Scope</legend><div>{properties.map(property => <label key={property}><input type="checkbox" name="properties" value={property} defaultChecked={(account?.properties ?? []).includes(property)} />{property}</label>)}</div></fieldset>
