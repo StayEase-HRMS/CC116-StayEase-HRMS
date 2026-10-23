@@ -19,6 +19,7 @@ function App() {
         <Route path="/customer" element={<CustomerPage />} /> 
 
         <Route path="/login" element={<AuthPage />} /> 
+        <Route path="/admin/login" element={<AuthPage />} /> 
 
         {/* Customer side routing*/}
         <Route path="/my-reservation" element={<CustomerPage />} />
